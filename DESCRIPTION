@@ -1,9 +1,25 @@
 Package: sgp
 Title: Multi-Scale Detection of Differential Interactions in Hi-C Data
 Version: 0.0.0.9000
-Authors@R: person("Hillary", "Koch", email = "hbk5086@psu.edu")
+Author: Hillary Koch
+Maintainer: <hillary.koch01@gmail.com>
 Description: Multi-Scale Detection of Differential Interactions in Hi-C Data
 Depends: R (>= 3.5.2)
-License: Artistic 2.0
+License: Artistic-2.0
 Encoding: UTF-8
 LazyData: true
+Imports:
+    emulator,
+    fields,
+    geoR,
+    LaplacesDemon,
+    magrittr,
+    RandomFieldsUtils,
+    Rcpp (>= 0.12.16),
+    stats,
+    testthat
+LinkingTo:
+    Rcpp,
+    RcppArmadillo
+SystemRequirements:
+    C++11
