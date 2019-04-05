@@ -1,36 +1,21 @@
 SpatialMCMC <- function(y,
                         s,
                         X,
-                        sp = NULL,
-                        # prediction locations
+                        sp = NULL, # prediction locations
                         Xp = NULL,
-                        cutoff = 0,
-                        # null is signal values below this, alternative is above
-                        mean_nu = log(1.5),
-                        # prior mean of the log matern smoothness parameter
-                        sd_nu = 1,
-                        # prior sd of the log matern spatial range parameter
-                        init_nu = NULL,
-                        # initial value of the log matern smoothness parameter
-                        init_nu_e = NULL,
-                        mean_range = -1,
-                        # prior mean of the log matern spatial range parameter
-                        sd_range = 1,
-                        # prior sd of the log matern spatial range parameter
-                        init_range = NULL,
-                        # init value of the log matern spatial range parameter
-                        init_range_e = NULL,
-                        init_r = NULL,
-                        # how much of the nugget is correlated vs iid noise
-                        as = .01,
-                        # the prior for the variance is InvG(as,bs)
+                        cutoff = 0, # null is signal values below this, alternative is above
+                        mean_nu = log(1.5), # prior mean of the log matern smoothness parameter
+                        sd_nu = 1, # prior sd of the log matern spatial range parameter
+                        init_nu = NULL, # initial value of the log matern smoothness parameter
+                        mean_range = -1, # prior mean of the log matern spatial range parameter
+                        sd_range = 1, # prior sd of the log matern spatial range parameter
+                        init_range = NULL, # init value of the log matern spatial range parameter
+                        init_r = NULL, # how much of the nugget is correlated vs iid noise
+                        as = .01,  # the prior for the variance is InvG(as,bs)
                         bs = .01,
-                        tauinv = NULL,
-                        # initial value of the variance term in matern cov
-                        sd_beta = 100,
-                        # regression coefficients have N(0, sd_beta) priors
-                        init_beta = NULL,
-                        # initial value of regression coefs
+                        tauinv = NULL, # initial value of the variance term in matern cov
+                        sd_beta = 100, # regression coefficients have N(0, sd_beta) priors
+                        init_beta = NULL, # initial value of regression coefs
                         iters = 500,
                         burnin = 100) {
     # number of observation locations, number of process replicates (sample size)
@@ -40,7 +25,7 @@ SpatialMCMC <- function(y,
     # number of predictors
     p <- ncol(X)
     
-    d <- cpwdist(s, s)
+    d <- cpwdist(s,s)
     predictions <- !is.null(sp) & !is.null(Xp)
     npred <- 1
     if (predictions) {
@@ -59,23 +44,14 @@ SpatialMCMC <- function(y,
     # These all default to NULL
     beta <- init_beta
     r <- init_r
-    rhos <- init_range
-    nus <- init_nu
-    rhoe <- init_range_e
-    nue <- init_nu_e
-    
-    if(is.null(init_range_e)) {
-        rhoe <- init_range    
-    }
-    if(is.null(init_nu_e)) {
-        nue <- init_nu
-    }
+    rhos <- rhoe <- init_range
+    nus <- nue <- init_nu
     
     # Get initial regression values from a simple linear model fit
-    if (reps > 1) {
+    if(reps > 1) {
         lmfit <- lm(rowMeans(y) ~ X - 1)
     } else {
-        lmfit <- lm(y ~ X - 1)
+        lmfit <- lm(y ~ X - 1)    
     }
     if (is.null(beta)) {
         beta <- lmfit$coef
@@ -98,7 +74,6 @@ SpatialMCMC <- function(y,
     if (is.null(nus)) {
         nus <- nue <- 0.5
     }
-    
     # tau is precision of matern covariance function
     tau <- 1 / tauinv
     rm(lmfit)
@@ -120,40 +95,20 @@ SpatialMCMC <- function(y,
     
     # matern_proposal cov is 2 x 2 matrix with diagonal 1 and off-diagonal -0.5
     # This is for updating hyperparameters nu and rho in the MCMC
-    # matern_proposal_cov <- diag(2) * 1.5 - 0.5
-    # proposal_chol <-
-    #     0.1 * t(RandomFieldsUtils::cholx(matern_proposal_cov))
-    tune_vars <- tune_vare <- rep(1, 2)
-    tune_covs <- tune_cove <- diag(2) * .1
+    matern_proposal_cov <- diag(2) * 1.5 - 0.5
+    proposal_chol <- 0.1 * t(RandomFieldsUtils::cholx(matern_proposal_cov))
     
-    # Tuning variance parameters
-    c0 <- 10
-    c1 <- 0.8
-    tune_k <- 2
-    win_len <- min(iters, 50)
-    acpts <- acpte <- c(1, rep(NA, win_len - 1))
-    acpt_rts <- acpt_rte <- 1
-    acpt_chain <- matrix(NA, ncol = 2, nrow = iters)
-    tune_var_chain <- matrix(NA, ncol = 4, nrow = iters)
-    colnames(acpt_chain) <- c("signal", "noise")
-    colnames(tune_var_chain) <- c("nus", "rhos", "nue", "rhoe")
-    
-    
-    pb <- txtProgressBar(min = 1,
-                         max = iters,
-                         style = 3)
+    pb <- txtProgressBar(min = 1, max = iters, style = 3)
     for (i in 1:iters) {
         #-------------------------------------------------------------
         # Update regression coefficients
         #-------------------------------------------------------------
-        premultX <-
-            reps * tau * tX %*% (PLDs$precision + PLDe$precision)
+        premultX <- reps * tau * tX %*% (PLDs$precision + PLDe$precision)
         varterm <- cinv(precision_beta + premultX %*% X)
         muterm <- premultX %*% rowMeans(y)
         
         # Sample new betas from this full conditional
-        beta <-
-            varterm %*% muterm + t(RandomFieldsUtils::cholx(varterm)) %*% rnorm(p)
+        beta <- varterm %*% muterm + t(RandomFieldsUtils::cholx(varterm)) %*% rnorm(p)
         Xb   <- as.vector(X %*% beta)
         
         #-------------------------------------------------------------
@@ -163,7 +118,7 @@ SpatialMCMC <- function(y,
         # tau ~ Gamma
         yminusXb <- sweep(y, 1, Xb)
         SS <- tau * sum(apply(yminusXb, 2, function(X)
-            emulator::quad.form(PLDs$precision, X)))
+                            emulator::quad.form(PLDs$precision, X)))
         tau <- rgamma(1, (n * reps) / 2 + as, SS / 2 + bs)
         SS  <- tau * SS
         
@@ -174,7 +129,7 @@ SpatialMCMC <- function(y,
         #   back. Actually they range and smoothness are proposed together, and are
         #   the proposal is from a MVNormal where range and smoothness are
         #   anti-correlated
-        epsilon <- t(chol(tune_covs)) %*% rnorm(2, 0, sqrt(tune_vars))
+        epsilon <- proposal_chol %*% rnorm(2)
         rhos_star <- exp(log(rhos) + epsilon[1])
         nus_star <- exp(log(nus) + epsilon[2])
         
@@ -183,7 +138,7 @@ SpatialMCMC <- function(y,
         
         # And the sum of squares star
         SS_star <- tau * sum(apply(yminusXb, 2, function(X)
-            emulator::quad.form(PLDs_star$precision, X)))
+                            emulator::quad.form(PLDs_star$precision, X)))
         
         # The acceptance ratio is the log proposal nu over the log current nu
         #   evaluated at the prior for nu (which is normal)
@@ -203,9 +158,6 @@ SpatialMCMC <- function(y,
                 nus <- nus_star
                 rhos <- rhos_star
                 PLDs <- PLDs_star
-                acpts[(i+1) %% win_len] <- 1
-            } else {
-                acpts[(i+1) %% win_len] <- 0
             }
         }
         
@@ -218,13 +170,13 @@ SpatialMCMC <- function(y,
         #   error process, vs. iid noise
         
         # log(r/(1-r)) is in (-Inf, Inf), and we propose from here using
-        #   a normal distribution whose result can be transformed back
+        #   a normal distribution whose result can be transformed back 
         SS <- sum(apply(yminusXb, 2, function(X)
             emulator::quad.form(PLDe$precision, X)))
         
-        lr <- log(r / (1 - r))
-        lr_star <- rnorm(1, lr, 0.5)
-        r_star <- exp(lr_star) / (1 + exp(lr_star))
+        lr     <- log(r / (1 - r))
+        lr_star  <- rnorm(1, lr, 0.5)
+        r_star  <- exp(lr_star) / (1 + exp(lr_star))
         PLDe_star <- get_prec_and_det(d, r_star, rhoe, nue)
         SS_star <- sum(apply(yminusXb, 2, function(X)
             emulator::quad.form(PLDe_star$precision, X)))
@@ -246,18 +198,10 @@ SpatialMCMC <- function(y,
         # Jointly propose new range and smoothness parameters for the error process
         # This procedure is exactly the same as the one used when updating
         #   nu and rho for the spatial signal Matern covariance
-        if(i == 1) {
-            nue_star <- 10
-            rhoe_star <- 0    
-        }
-        while(!(nue_star > .0001 & nue_star < 15) & !(rhoe_star > .0001 & rhoe_star < 15)) {
-            epsilon <- t(chol(tune_cove)) %*% rnorm(2, 0, sqrt(tune_vare))
-            rhoe_star <- exp(log(rhoe) + epsilon[1])
-            nue_star <- exp(log(nue) + epsilon[2])    
-        }
-        
+        epsilon <- proposal_chol %*% rnorm(2)
+        rhoe_star <- exp(log(rhoe) + epsilon[1])
+        nue_star <- exp(log(nue) + epsilon[2])
         PLDe_star <- get_prec_and_det(d, r, rhoe_star, nue_star)
-        
         SS_star <- sum(apply(yminusXb, 2, function(X)
             emulator::quad.form(PLDe_star$precision, X)))
         R <- dnorm(log(nue_star), mean_nu, sd_nu, log = T) -
@@ -271,55 +215,23 @@ SpatialMCMC <- function(y,
                 nue <- nue_star
                 rhoe <- rhoe_star
                 PLDe <- PLDe_star
-                acpte[(i+1) %% win_len] <- 1
-            } else {
-                acpte[(i+1) %% win_len] <- 0
             }
         }
         
-        beta_chain[i,] <- beta
-        param_chain[i,] <- c(1 / sqrt(tau), r, rhos, nus, rhoe, nue)
-        acpt_chain[i,] <- c(acpt_rts, acpt_rte)
-        tune_var_chain[i,] <- c(tune_vars, tune_vare)
-        
-        # update proposal tuning variances for signal and noise range and smoothness params
-        if(i >= win_len) {
-            sub0s <- param_chain[(i-win_len+1):i, c("range_s", "nu_s")]
-            sweeps <- sweep(sub0s, 2, colMeans(sub0s))
-            S0s_hat <- t(sweeps) %*% sweeps / (win_len-1)
-            
-            sub0e <- param_chain[(i-win_len+1):i, c("range_e", "nu_e")]
-            sweepe <- sweep(sub0e, 2, colMeans(sub0e))
-            S0e_hat <- t(sweepe) %*% sweepe / (win_len-1)
-            
-            gamma2 <- 1 / (i + tune_k) ^ (c1)
-            gamma1 <- gamma2 * c0
-            acpt_rts <- mean(acpts, na.rm = TRUE)
-            acpt_rte <- mean(acpte, na.rm = TRUE)
-            
-            tune_vars <- update_var(tune_vars, acpt_rts, .3, gamma1)
-            tune_vare <- update_var(tune_vare, acpt_rte, .3, gamma1)
-            
-            tune_covs <- tune_covs + gamma2 * (S0s_hat - tune_covs)
-            tune_cove <- tune_cove + gamma2 * (S0e_hat - tune_covs)
-        }
+        beta_chain[i, ] <- beta
+        param_chain[i, ] <- c(1 / sqrt(tau), r, rhos, nus, rhoe, nue)
         
         if (i >= burnin & predictions) {
             S11 <- fields::Matern(d11, range = rhos, smoothness = nus) / tau
-            S12 <-
-                fields::Matern(d12, range = rhos, smoothness = nus)
+            S12 <- fields::Matern(d12, range = rhos, smoothness = nus) 
             S22inv <- tau * PLDs$precision
             
-            ypred[i,] <-
-                Xp %*% beta + proj(y - Xb, S12, S11, S22inv)
+            ypred[i, ] <- Xp %*% beta + proj(y - Xb, S12, S11, S22inv)
         }
         
         setTxtProgressBar(pb, i)
     }
     close(pb)
-    list("beta" = beta_chain,
-         "covar_params" = param_chain,
-         "pred" = ypred[burnin:iters,],
-         "acpt_chain" = acpt_chain,
-         "tune_var_chain" = tune_var_chain)
+    
+    list("beta" = beta_chain, "covar_params" = param_chain, "pred" = ypred[burnin:iters, ])
 }
