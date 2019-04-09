@@ -21,10 +21,10 @@ run_sgp_nugget <- function(y,
     # number of observation locations, number of process replicates (sample size)
     n <- nrow(y)
     reps <- ncol(y)
-    
+
     # number of predictors
     p <- ncol(X)
-    
+
     d <- cpwdist(s,s)
     predictions <- !is.null(sp) & !is.null(Xp)
     npred <- 1
@@ -35,22 +35,22 @@ run_sgp_nugget <- function(y,
     }
     tX <- t(X)
     precision_beta <- diag(p) / (sd_beta ^ 2)
-    
-    
+
+
     #----------------------------------------------------
     # Initial values
     #----------------------------------------------------
-    
+
     # These all default to NULL
     beta <- init_beta
     rhos <- init_range
     nus <- init_nu
-    
+
     # Get initial regression values from a simple linear model fit
     if(reps > 1) {
         lmfit <- lm(rowMeans(y) ~ X - 1)
     } else {
-        lmfit <- lm(y ~ X - 1)    
+        lmfit <- lm(y ~ X - 1)
     }
     if (is.null(beta)) {
         beta <- lmfit$coef
@@ -61,42 +61,42 @@ run_sgp_nugget <- function(y,
     if(is.null(errvar)) {
         errvar <- var(lmfit$res)
     }
-    
+
     # init value of the log matern spatial range parameter
     if (is.null(rhos)) {
         rhos  <- unname(quantile(d, 0.1))
     }
-    
+
     # initial value of the log matern smoothness parameter
     if (is.null(nus)) {
         nus <- 0.5
     }
     # tau is precision of matern covariance function
     tau <- 1 / tauinv
-    
+
     # errprec  is the precision of the nugget
     errprec <- 1 / errvar
     rm(lmfit)
-    
+
     # Precision matrix and log determinant for the spatial and error processes
     PLDs <- get_prec_and_det(d, 1, rhos, nus)
     Xb   <- as.vector(X %*% beta)
-    
+
     # chain of predicted values for y
     # If no prediction locations, just iters of zeroes that won't update
     ypred <- matrix(0, iters, npred)
-    
+
     # store regression coefficients and covariance params
     beta_chain <- matrix(0, iters, p)
-    param_chain <- matrix(0, iters, 5)
+    param_chain <- matrix(0, iters, 4)
     colnames(param_chain) <-
-        c("sigma", "r", "range_s", "nu_s", "err_sd")
-    
+        c("sigma", "range_s", "nu_s", "err_sd")
+
     # matern_proposal cov is 2 x 2 matrix with diagonal 1 and off-diagonal -0.5
     # This is for updating hyperparameters nu and rho in the MCMC
     matern_proposal_cov <- diag(2) * 1.5 - 0.5
     proposal_chol <- 0.1 * t(RandomFieldsUtils::cholx(matern_proposal_cov))
-    
+
     pb <- txtProgressBar(min = 1, max = iters, style = 3)
     for (i in 1:iters) {
         #-------------------------------------------------------------
@@ -105,22 +105,22 @@ run_sgp_nugget <- function(y,
         premultX <- reps * tau * tX %*% (PLDs$precision + diag(errprec, n))
         varterm <- cinv(precision_beta + premultX %*% X)
         muterm <- premultX %*% rowMeans(y)
-        
+
         # Sample new betas from this full conditional
         beta <- varterm %*% muterm + t(RandomFieldsUtils::cholx(varterm)) %*% rnorm(p)
         Xb   <- as.vector(X %*% beta)
-        
+
         #-------------------------------------------------------------
         # Update covariance parameters for the spatial signal process
         #-------------------------------------------------------------
-        
+
         # tau ~ Gamma
         yminusXb <- sweep(y, 1, Xb)
         SS <- tau * sum(apply(yminusXb, 2, function(X)
                             emulator::quad.form(PLDs$precision, X)))
         tau <- rgamma(1, (n * reps) / 2 + as, SS / 2 + bs)
         SS  <- tau * SS
-        
+
         # Jointly propose new range and smoothness parameters
         # Accept or reject based on R (log likelihood ratio)
         # The proposal takes the log of the range/smoothness (rho and nu both > 0),
@@ -131,14 +131,14 @@ run_sgp_nugget <- function(y,
         epsilon <- proposal_chol %*% rnorm(2)
         rhos_star <- exp(log(rhos) + epsilon[1])
         nus_star <- exp(log(nus) + epsilon[2])
-        
+
         # Obtain the precision of the matern covariance based on the proposed parameters
         PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus_star)
-        
+
         # And the sum of squares star
         SS_star <- tau * sum(apply(yminusXb, 2, function(X)
                             emulator::quad.form(PLDs_star$precision, X)))
-        
+
         # The acceptance ratio is the log proposal nu over the log current nu
         #   evaluated at the prior for nu (which is normal)
         # times the ratio of the log proposal rho over the log current rho
@@ -159,31 +159,31 @@ run_sgp_nugget <- function(y,
                 PLDs <- PLDs_star
             }
         }
-        
-        
+
+
         #-------------------------------------------------------------
         # Update error variance term
         #-------------------------------------------------------------
-        
+
         # errprec ~ Gamma
         yminusXb <- sweep(y, 1, Xb)
         SSe <- errprec * sum(apply(yminusXb, 2, function(Y) t(Y) %*% Y))
         errprec <- rgamma(1, (n * reps) / 2 + as, SSe / 2 + bs)
-        
+
         beta_chain[i, ] <- beta
         param_chain[i, ] <- c(1 / sqrt(tau), rhos, nus, 1 / sqrt(errprec))
-        
+
         if (i >= burnin & predictions) {
             S11 <- fields::Matern(d11, range = rhos, smoothness = nus) / tau
-            S12 <- fields::Matern(d12, range = rhos, smoothness = nus) 
+            S12 <- fields::Matern(d12, range = rhos, smoothness = nus)
             S22inv <- tau * PLDs$precision
-            
+
             ypred[i, ] <- Xp %*% beta + proj(y - Xb, S12, S11, S22inv)
         }
-        
+
         setTxtProgressBar(pb, i)
     }
     close(pb)
-    
+
     list("beta" = beta_chain, "covar_params" = param_chain, "pred" = ypred[burnin:iters, ])
 }
