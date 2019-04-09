@@ -1,10 +1,10 @@
 Package: sgp
 Title: Multi-Scale Detection of Differential Interactions in Hi-C Data
-Version: 0.0.0.9000
+Version: 0.0.99
 Author: Hillary Koch
 Maintainer: <hillary.koch01@gmail.com>
 Description: Multi-Scale Detection of Differential Interactions in Hi-C Data
-Depends: R (>= 3.5.2)
+Depends: R (>= 3.5.1)
 License: Artistic-2.0
 Encoding: UTF-8
 LazyData: true
