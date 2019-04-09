@@ -1,1 +1,7 @@
-readme
+sgp.R will contain a wrapper for the functions in correlated.R and nug_only.R
+
+correlated.R runs the sgp with correlated errors
+
+nug_only will only have a nugget term but sample an error variance
+
+sgp.R will provide a check for the number of replicates. If only 1, correlated.R cannot be run
