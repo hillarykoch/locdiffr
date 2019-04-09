@@ -70,7 +70,6 @@ extend_mcmc <- function(fit,
                        iters = 500) {
     iters_so_far <- nrow(fit$covar_params)
 
-
     if (corr_errs) {
         init_nu_e <- fit$covar_params[iters_so_far, "nu_e"]
         init_range_e <- fit$covar_params[iters_so_far, "range_e"]
