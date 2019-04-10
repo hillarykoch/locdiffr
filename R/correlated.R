@@ -13,6 +13,7 @@ run_sgp_correlated_errs <- function(y,
                         init_range_s = NULL, # init value of the log matern spatial range parameter
                         init_range_e = NULL, # init value of the log matern spatial range parameter
                         init_r = NULL, # how much of the nugget is correlated vs iid noise
+                        sd_r = 3, # standard deviation on prior for log(r/(1-r))
                         as = .01,  # the prior for the variance is InvG(as,bs)
                         bs = .01,
                         tauinv = NULL, # initial value of the variance term in matern cov
@@ -195,8 +196,8 @@ run_sgp_correlated_errs <- function(y,
 
         # The candidate lr and new zlr_star are evaluated at the prior on lr
         #   and then again the Multivariate normal likelihood
-        R <- dnorm(lr_star, log = T) -
-            dnorm(lr_star, log = T) +
+        R <- dnorm(lr_star, sd = sd_r, log = T) -
+            dnorm(lr,  sd = sd_r, log = T) +
             0.5 * (PLDe_star$ldeterminant - PLDe$ldeterminant) -
             0.5 * (SS_star - SS)
         if (!is.na(exp(R))) {
