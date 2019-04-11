@@ -10,8 +10,8 @@ run_sgp_nugget <- function(y,
                         mean_range = -1, # prior mean of the log matern spatial range parameter
                         sd_range = 1, # prior sd of the log matern spatial range parameter
                         init_range = NULL, # init value of the log matern spatial range parameter
-                        as = .01,  # the prior for the variance is InvG(as,bs)
-                        bs = .01,
+                        as = 2,  # the prior for the variance is InvG(as,bs)
+                        bs = 2,
                         tauinv = NULL, # initial value of the variance term in matern cov
                         errvar = NULL, # nugget variance
                         sd_beta = 100, # regression coefficients have N(0, sd_beta) priors

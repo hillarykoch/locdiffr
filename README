@@ -1,7 +1,21 @@
-sgp.R will contain a wrapper for the functions in correlated.R and nug_only.R
+# Multi-Scale Differential InteractionsSometimes package won't load if the correct shared objects aren't found. So, if
 
-correlated.R runs the sgp with correlated errors
+```{r}
+devtools::install_github("hillarykoch/sgp")
+```
 
-nug_only will only have a nugget term but sample an error variance
+doesn't work, need to try
 
-sgp.R will provide a check for the number of replicates. If only 1, correlated.R cannot be run
+```{bash}git clone https://github.com/hillarykoch/sgpR CMD build sgp
+R
+```
+
+```{r}
+Sys.setenv("PKG_LIBS" = "/usr/lib64/R/modules/lapack.so")install.packages("sgp_0.0.99.tar.gz", repos = NULL, type = "source")q()
+n
+```
+
+```{bash}
+rm -rf sgp
+rm sgp_0.0.99.tar.gz
+```
