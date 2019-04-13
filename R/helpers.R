@@ -9,8 +9,8 @@ get_prec_and_det <- function(d,
         r * fields::Matern(d, range = range, smoothness = nu) + (1 - r) * cifelse(d)
 
     if (any(is.nan(Q))) {
-        # For debugging
-        stop("nans in Q when calling get_prec_and_det.")
+        warning("nans in Q when calling get_prec_and_det.")
+        return(NA)
     } else {
         # Get the eigenvalues/vectors
         eigvals <- cgeteigs(Q)
@@ -19,8 +19,10 @@ get_prec_and_det <- function(d,
         D <- cifelse_eigvals(eigvals, thresh)
 
         # Inverse correlation and its log determinant
-        list("precision" = cinv(Q),
-             "ldeterminant" = sum(log(D)))
+        return(list(
+            "precision" = cinv(Q),
+            "ldeterminant" = sum(log(D))
+        ))
     }
 }
 
@@ -31,29 +33,28 @@ make_pred <- function(y, matern_cov, tau) {
     rowMeans(y) + t(RandomFieldsUtils::cholx(cond_cov)) %*% rnorm(np)
 }
 
-update_var <- function(cur_var, acpt_rt, opt_rt = .3, gamma1) {
-    exp(log(cur_var) + gamma1 * (acpt_rt - opt_rt))
-}
-
+# update_var <- function(cur_var, acpt_rt, opt_rt = .3, gamma1) {
+#     exp(log(cur_var) + gamma1 * (acpt_rt - opt_rt))
+# }
 
 extend_mcmc <- function(fit,
-                       y,
-                       s,
-                       X,
-                       sp = NULL,
-                       Xp = NULL,
-                       corr_errs = FALSE,
-                       cutoff = 0,
-                       mean_nu = log(1.5),
-                       sd_nu = 1,
-                       mean_range = -1,
-                       sd_range = 1,
-                       as = 1.5,
-                       bs = 1.5,
-                       tauinv = NULL,
-                       errvar = NULL,
-                       sd_beta = 100,
-                       iters = 500) {
+                        y,
+                        s,
+                        X,
+                        sp = NULL,
+                        Xp = NULL,
+                        corr_errs = FALSE,
+                        cutoff = 0,
+                        mean_nu = log(1.5),
+                        sd_nu = 1,
+                        mean_range = -1,
+                        sd_range = 1,
+                        as = 1.5,
+                        bs = 1.5,
+                        tauinv = NULL,
+                        errvar = NULL,
+                        sd_beta = 100,
+                        iters = 500) {
     iters_so_far <- nrow(fit$covar_params)
 
     if (corr_errs) {
@@ -68,7 +69,7 @@ extend_mcmc <- function(fit,
     init_nu <- fit$covar_params[iters_so_far, "nu_s"]
     init_range <- fit$covar_params[iters_so_far, "range_s"]
     tauinv <- fit$covar_params[iters_so_far, "sigma"] ^ 2
-    init_beta <- fit$beta[nrow(fit$beta), ]
+    init_beta <- fit$beta[nrow(fit$beta),]
 
     run_sgp(
         y,

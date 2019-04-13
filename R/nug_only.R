@@ -129,16 +129,6 @@ run_sgp_nugget <- function(y,
         SS <- tau * sum(apply(yminusXb, 2, function(X)
             emulator::quad.form(PLDs$precision, X)))
         tau <- rgamma(1, (n * reps) / 2 + as, SS / 2 + bs)
-        # tau <-
-        #     LaplacesDemon::rtrunc(
-        #         1,
-        #         "gamma",
-        #         a = 1,
-        #         b = Inf,
-        #         shape = (n * reps) / 2 + as,
-        #         rate = SS / 2 + bs
-        #     )
-
         SS  <- tau * SS
 
         # Jointly propose new range and smoothness parameters
@@ -148,12 +138,14 @@ run_sgp_nugget <- function(y,
         #   back. Actually they range and smoothness are proposed together, and are
         #   the proposal is from a MVNormal where range and smoothness are
         #   anti-correlated
-        epsilon <- proposal_chol %*% rnorm(2)
-        rhos_star <- exp(log(rhos) + epsilon[1])
-        nus_star <- exp(log(nus) + epsilon[2])
 
-        # Obtain the precision of the matern covariance based on the proposed parameters
-        PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus_star)
+        PLDs_star <- NA
+        while(is.na(PLDs_star)) {
+            epsilon <- proposal_chol %*% rnorm(2)
+            rhos_star <- exp(log(rhos) + epsilon[1])
+            nus_star <- exp(log(nus) + epsilon[2])
+            PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus_star)
+        }
 
         # And the sum of squares star
         SS_star <- tau * sum(apply(yminusXb, 2, function(X)

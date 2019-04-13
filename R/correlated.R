@@ -10,7 +10,7 @@ run_sgp_correlated_errs <- function(y,
                         sd_range = 1, # prior sd of the log matern spatial range parameter
                         init_range_s = NULL, # init value of the log matern spatial range parameter
                         init_range_e = NULL, # init value of the log matern spatial range parameter
-                        init_r = NULL, # how much of the nugget is correlated vs iid noise
+                        init_r = NULL, # how much of the error process is correlated vs iid noise
                         sd_r = 3, # standard deviation on prior for log(r/(1-r))
                         as = 2,  # the prior for the variance is InvG(as,bs)
                         bs = .5,
@@ -126,16 +126,6 @@ run_sgp_correlated_errs <- function(y,
         SS <- tau * sum(apply(yminusXb, 2, function(X)
                             emulator::quad.form(PLDs$precision, X)))
         tau <- rgamma(1, (n * reps) / 2 + as, SS / 2 + bs)
-        # tau <-
-        #     LaplacesDemon::rtrunc(
-        #         1,
-        #         "gamma",
-        #         a = 1,
-        #         b = Inf,
-        #         shape = (n * reps) / 2 + as,
-        #         rate = SS / 2 + bs
-        #     )
-
         SS  <- tau * SS
 
         # Jointly propose new range and smoothness parameters
@@ -145,12 +135,14 @@ run_sgp_correlated_errs <- function(y,
         #   back. Actually they range and smoothness are proposed together, and are
         #   the proposal is from a MVNormal where range and smoothness are
         #   anti-correlated
-        epsilon <- proposal_chol %*% rnorm(2)
-        rhos_star <- exp(log(rhos) + epsilon[1])
-        nus_star <- exp(log(nus) + epsilon[2])
 
-        # Obtain the precision of the matern covariance based on the proposed parameters
-        PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus_star)
+        PLDs_star <- NA
+        while(is.na(PLDs_star)) {
+            epsilon <- proposal_chol %*% rnorm(2)
+            rhos_star <- exp(log(rhos) + epsilon[1])
+            nus_star <- exp(log(nus) + epsilon[2])
+            PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus_star)
+        }
 
         # And the sum of squares star
         SS_star <- tau * sum(apply(yminusXb, 2, function(X)
@@ -188,11 +180,15 @@ run_sgp_correlated_errs <- function(y,
         #   a normal distribution whose result can be transformed back
         SS <- sum(apply(yminusXb, 2, function(X)
             emulator::quad.form(PLDe$precision, X)))
-
         lr     <- log(r / (1 - r))
-        lr_star  <- rnorm(1, lr, 0.5)
-        r_star  <- exp(lr_star) / (1 + exp(lr_star))
-        PLDe_star <- get_prec_and_det(d, r_star, rhoe, nue)
+
+        PLDe_star <- NA
+        while(is.na(PLDe_star)) {
+            lr_star  <- rnorm(1, lr, 0.5)
+            r_star  <- exp(lr_star) / (1 + exp(lr_star))
+            PLDe_star <- get_prec_and_det(d, r_star, rhoe, nue)
+        }
+
         SS_star <- sum(apply(yminusXb, 2, function(X)
             emulator::quad.form(PLDe_star$precision, X)))
 
@@ -213,10 +209,16 @@ run_sgp_correlated_errs <- function(y,
         # Jointly propose new range and smoothness parameters for the error process
         # This procedure is exactly the same as the one used when updating
         #   nu and rho for the spatial signal Matern covariance
-        epsilon <- proposal_chol %*% rnorm(2)
-        rhoe_star <- exp(log(rhoe) + epsilon[1])
-        nue_star <- exp(log(nue) + epsilon[2])
-        PLDe_star <- get_prec_and_det(d, r, rhoe_star, nue_star)
+
+        # Sometimes the proposal is bad -- this prevents the program from dying
+        PLDe_star <- NA
+        while(is.na(PLDe_star)) {
+            epsilon <- proposal_chol %*% rnorm(2)
+            rhoe_star <- exp(log(rhoe) + epsilon[1])
+            nue_star <- exp(log(nue) + epsilon[2])
+            PLDe_star <- get_prec_and_det(d, r, rhoe_star, nue_star)
+        }
+
         SS_star <- sum(apply(yminusXb, 2, function(X)
             emulator::quad.form(PLDe_star$precision, X)))
         R <- dnorm(log(nue_star), mean_nu, sd_nu, log = T) -
