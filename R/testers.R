@@ -2,14 +2,14 @@ FDR <- function(theta,
                 alpha = .1,
                 nthresh = 100) {
     # Theta is an indicator -- was the predicted value as location s greater than mu0?
-    #pick reject so that E(mean(theta[reject]))<alpha
-    
+    #pick reject so that E(mean(theta[reject]))<confidence
+
     # Probability at each prediction location of an observation being greater than mu0
     inprob <- apply(theta, 2, mean)
-    
+
     # A grid of thresholds to test
     thresh <- seq(0, 1, length = nthresh)
-    
+
     # The Bayes FDR at each threshold
     # (want to find one that is closest to and not greater than choice of alpha)
     BFDR <- rep(0, nthresh)
@@ -34,10 +34,10 @@ FDX <- function(theta,
                 beta = .9,
                 nthresh = 100) {
     #pick reject so that P(mean(theta[reject])<alpha)<beta
-    
+
     reject <- rep(0, nrow(theta))
     level <- 0
-    
+
     inprob <- apply(theta, 2, mean) # proportion rejected at each spatial location
     thresh <- seq(0, max(inprob), length = nthresh)
     BFDX <- rep(0, nthresh)
@@ -49,7 +49,7 @@ FDX <- function(theta,
             BFDX[j] <- mean(1-apply(theta[, these], 1, mean) < alpha)
         }
     }
-    
+
     # The level is the minimum value such that the BFDX exceeds bound beta
     level <- 1
     if (sum(BFDX > beta) > 0) {

@@ -9,7 +9,8 @@ get_prec_and_det <- function(d,
         r * fields::Matern(d, range = range, smoothness = nu) + (1 - r) * cifelse(d)
 
     if (any(is.nan(Q))) {
-        stop("nans in Q in get_prec_and_det sorry")
+        # For debugging
+        stop("nans in Q when calling get_prec_and_det.")
     } else {
         # Get the eigenvalues/vectors
         eigvals <- cgeteigs(Q)
@@ -23,26 +24,11 @@ get_prec_and_det <- function(d,
     }
 }
 
-
-# mean =  rowMeans(C(t,t) [C(t,t) + sigma^2I]^-1 y)
-# C(t,t) - C(t,t) [C(t,t) + sigma^2I]^-1 C(t,t)
-# S11 <- fields::Matern(d11, range = rhos, smoothness = nus) / tau
-# S12 <- fields::Matern(d12, range = rhos, smoothness = nus)
-# S22inv <- tau * PLDs$precision
-#
-# ypred[i, ] <- Xp %*% beta + proj(y - Xb, S12, S11, S22inv)
-
 # Treats as mean 0 here, and is added on to Xp %*% beta in the actual body of the code
-proj <- function(y, S12, S11, S22inv) {
-    np   <- nrow(S12)
-    XXX  <- S12 %*% S22inv
-    mn   <- rowMeans(XXX %*% y)
-    E    <- eigen(S11 - XXX %*% t(S12))
-    PPP  <- Re(E$vectors)
-    D    <- Re(E$values)
-    D    <- sqrt(ifelse(D > 0, D, 0))
-    yp   <- mn + PPP %*% rnorm(np, 0, D)
-    return(yp)
+make_pred <- function(y, matern_cov, tau) {
+    np   <- nrow(matern_cov)
+    cond_cov <- matern_cov / tau
+    rowMeans(y) + t(RandomFieldsUtils::cholx(cond_cov)) %*% rnorm(np)
 }
 
 update_var <- function(cur_var, acpt_rt, opt_rt = .3, gamma1) {

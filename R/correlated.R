@@ -1,8 +1,6 @@
 run_sgp_correlated_errs <- function(y,
                         s,
                         X,
-                        sp = NULL, # prediction locations
-                        Xp = NULL,
                         cutoff = 0, # null is signal values below this, alternative is above
                         mean_nu = log(1.5), # prior mean of the log matern smoothness parameter
                         sd_nu = 1, # prior sd of the log matern spatial range parameter
@@ -29,13 +27,8 @@ run_sgp_correlated_errs <- function(y,
     p <- ncol(X)
 
     d <- cpwdist(s,s)
-    predictions <- !is.null(sp) & !is.null(Xp)
-    npred <- 1
-    if (predictions) {
-        npred <- nrow(sp)
-        d12 <- cpwdist(sp, s)
-        d11 <- cpwdist(sp, sp)
-    }
+    npred <- nrow(s)
+
     tX <- t(X)
     precision_beta <- diag(p) / (sd_beta ^ 2)
 
@@ -133,6 +126,16 @@ run_sgp_correlated_errs <- function(y,
         SS <- tau * sum(apply(yminusXb, 2, function(X)
                             emulator::quad.form(PLDs$precision, X)))
         tau <- rgamma(1, (n * reps) / 2 + as, SS / 2 + bs)
+        # tau <-
+        #     LaplacesDemon::rtrunc(
+        #         1,
+        #         "gamma",
+        #         a = 1,
+        #         b = Inf,
+        #         shape = (n * reps) / 2 + as,
+        #         rate = SS / 2 + bs
+        #     )
+
         SS  <- tau * SS
 
         # Jointly propose new range and smoothness parameters
@@ -173,7 +176,6 @@ run_sgp_correlated_errs <- function(y,
                 PLDs <- PLDs_star
             }
         }
-
 
         #-------------------------------------------------------------
         # Update covariance parameters for the error process
@@ -234,12 +236,9 @@ run_sgp_correlated_errs <- function(y,
         beta_chain[i, ] <- beta
         param_chain[i, ] <- c(1 / sqrt(tau), r, rhos, nus, rhoe, nue)
 
-        if (i >= burnin & predictions) {
-            S11 <- fields::Matern(d11, range = rhos, smoothness = nus) / tau
-            S12 <- fields::Matern(d12, range = rhos, smoothness = nus)
-            S22inv <- tau * PLDs$precision
-
-            ypred[i, ] <- Xp %*% beta + proj(y - Xb, S12, S11, S22inv)
+        if (i >= burnin) {
+            matern_cov <- fields::Matern(d, range = rhos, smoothness = nus)
+            ypred[i, ] <- X %*% beta + make_pred(y - Xb, matern_cov, tau)
         }
 
         setTxtProgressBar(pb, i)
