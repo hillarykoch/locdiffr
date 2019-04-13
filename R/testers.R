@@ -1,25 +1,23 @@
 FDR <- function(theta,
                 alpha = .1,
                 nthresh = 100) {
-    # Theta is an indicator -- was the predicted value as location s greater than mu0?
-    #pick reject so that E(mean(theta[reject]))<confidence
+    # Theta is an indicator -- was the predicted value as location s
+    #   less than X * beta at location s?
+    # reject constructed such that E(mean(theta[reject])) < alpha
 
-    # Probability at each prediction location of an observation being greater than mu0
-    inprob <- apply(theta, 2, mean)
-
-    # A grid of thresholds to test
+    rej_prob <- colMeans(theta)
     thresh <- seq(0, 1, length = nthresh)
 
     # The Bayes FDR at each threshold
     # (want to find one that is closest to and not greater than choice of alpha)
     BFDR <- rep(0, nthresh)
     for (j in 1:nthresh) {
-        if (sum(inprob >= thresh[j]) > 0) {
-            BFDR[j] <- 1 - mean(inprob[inprob >= thresh[j]])
+        if (sum(rej_prob >= thresh[j]) > 0) {
+            BFDR[j] <- 1 - mean(rej_prob[rej_prob >= thresh[j]])
         }
     }
     level <- min(thresh[BFDR < alpha])
-    reject <- inprob > level
+    reject <- rej_prob > level
     list(
         level = level,
         reject = reject,
@@ -33,20 +31,15 @@ FDX <- function(theta,
                 alpha = .1,
                 beta = .9,
                 nthresh = 100) {
-    #pick reject so that P(mean(theta[reject])<alpha)<beta
+    # reject constructed such that P(mean(theta[reject]) < alpha) < beta
 
-    reject <- rep(0, nrow(theta))
-    level <- 0
-
-    inprob <- apply(theta, 2, mean) # proportion rejected at each spatial location
-    thresh <- seq(0, max(inprob), length = nthresh)
+    rej_prob <- colMeans(theta)
+    thresh <- seq(0, max(rej_prob), length = nthresh)
     BFDX <- rep(0, nthresh)
     for (j in 1:nthresh) {
-        # for fixed threshold in range 0 -- max(inprob), which sites have proportion rejected greater than that threshhold?
-        these <- inprob >= thresh[j]
-        if (sum(these) > 1) {
-            # How many of these have propotion of rejections < 1-alpha
-            BFDX[j] <- mean(1-apply(theta[, these], 1, mean) < alpha)
+        xceeds <- rej_prob >= thresh[j]
+        if (sum(xceeds) > 1) {
+            BFDX[j] <- mean(1-rowMeans(theta[, xceeds]) < alpha)
         }
     }
 
@@ -55,7 +48,7 @@ FDX <- function(theta,
     if (sum(BFDX > beta) > 0) {
         level <- min(thresh[BFDX > beta])
     }
-    reject <- inprob > level
+    reject <- rej_prob > level
     list(
         level = level,
         reject = reject,
