@@ -140,7 +140,7 @@ run_sgp_nugget <- function(y,
         #   anti-correlated
 
         PLDs_star <- NA
-        while(is.na(PLDs_star)) {
+        while(is.na(PLDs_star[1])) {
             epsilon <- proposal_chol %*% rnorm(2)
             rhos_star <- exp(log(rhos) + epsilon[1])
             nus_star <- exp(log(nus) + epsilon[2])

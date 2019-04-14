@@ -106,7 +106,7 @@ get_scc <- function(mat1, mat2, resol, h, lbr = 0, ubr = 5e+06) {
     list(corr = corr, wei = wei, scc = scc, std = std)
 }
 
-est_scc = function(dist, ub, smoo1, smoo2, nr){
+est_scc <- function(dist, ub, smoo1, smoo2, nr){
     if (dist < ub - 1){
         ffd1 <- ffd2 <- NULL
         for (i in 1:(ncol(smoo1) - dist)) {

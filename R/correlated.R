@@ -137,7 +137,7 @@ run_sgp_correlated_errs <- function(y,
         #   anti-correlated
 
         PLDs_star <- NA
-        while(is.na(PLDs_star)) {
+        while(is.na(PLDs_star[1])) {
             epsilon <- proposal_chol %*% rnorm(2)
             rhos_star <- exp(log(rhos) + epsilon[1])
             nus_star <- exp(log(nus) + epsilon[2])
@@ -183,7 +183,7 @@ run_sgp_correlated_errs <- function(y,
         lr     <- log(r / (1 - r))
 
         PLDe_star <- NA
-        while(is.na(PLDe_star)) {
+        while(is.na(PLDe_star[1])) {
             lr_star  <- rnorm(1, lr, 0.5)
             r_star  <- exp(lr_star) / (1 + exp(lr_star))
             PLDe_star <- get_prec_and_det(d, r_star, rhoe, nue)
@@ -212,7 +212,7 @@ run_sgp_correlated_errs <- function(y,
 
         # Sometimes the proposal is bad -- this prevents the program from dying
         PLDe_star <- NA
-        while(is.na(PLDe_star)) {
+        while(is.na(PLDe_star[1])) {
             epsilon <- proposal_chol %*% rnorm(2)
             rhoe_star <- exp(log(rhoe) + epsilon[1])
             nue_star <- exp(log(nue) + epsilon[2])
