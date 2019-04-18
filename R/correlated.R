@@ -12,10 +12,10 @@ run_sgp_correlated_errs <- function(y,
                         init_range_e = NULL, # init value of the log matern spatial range parameter
                         init_r = NULL, # how much of the error process is correlated vs iid noise
                         sd_r = 3, # standard deviation on prior for log(r/(1-r))
-                        as = 2,  # the prior for the variance is InvG(as,bs)
-                        bs = .5,
+                        as = 5,  # the prior for the variance is InvG(as,bs)
+                        bs = 2,
                         tauinv = NULL, # initial value of the variance term in matern cov
-                        sd_beta = 100, # regression coefficients have N(0, sd_beta) priors
+                        sd_beta = 10, # regression coefficients have N(0, sd_beta) priors
                         init_beta = NULL, # initial value of regression coefs
                         iters = 500,
                         burnin = 100) {
