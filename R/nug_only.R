@@ -3,26 +3,22 @@ run_sgp_nugget <- function(y,
                            X,
                            cutoff = 0,
                            # null is signal values below this, alternative is above
-                           mean_nu = log(1.5),
-                           # prior mean of the log matern smoothness parameter
-                           sd_nu = 1,
-                           # prior sd of the log matern spatial range parameter
-                           init_nu = NULL,
-                           # initial value of the log matern smoothness parameter
-                           mean_range = -1,
+                           init_nu = 0.5,
+                           # fixed value of the log matern smoothness parameter
+                           mean_range = 0,
                            # prior mean of the log matern spatial range parameter
-                           sd_range = 1,
+                           sd_range = 1.5,
                            # prior sd of the log matern spatial range parameter
                            init_range = NULL,
                            # init value of the log matern spatial range parameter
-                           as = 5,
+                           as = 2,
                            # the prior for the variance is InvG(as,bs)
                            bs = 2,
                            tauinv = NULL,
                            # initial value of the variance term in matern cov
                            errvar = NULL,
                            # nugget variance
-                           sd_beta = 10,
+                           sd_beta = 3,
                            # regression coefficients have N(0, sd_beta) priors
                            init_beta = NULL,
                            # initial value of regression coefs
@@ -72,10 +68,6 @@ run_sgp_nugget <- function(y,
         rhos  <- unname(quantile(d, 0.1))
     }
 
-    # initial value of the log matern smoothness parameter
-    if (is.null(nus)) {
-        nus <- 0.5
-    }
     # tau is precision of matern covariance function
     tau <- 1 / tauinv
 
@@ -93,15 +85,23 @@ run_sgp_nugget <- function(y,
 
     # store regression coefficients and covariance params
     beta_chain <- matrix(0, iters, p)
-    param_chain <- matrix(0, iters, 4)
+    param_chain <- matrix(0, iters, 3)
     colnames(param_chain) <-
-        c("sigma", "range_s", "nu_s", "err_sd")
+        c("sigma", "range_s", "err_sd")
 
-    # matern_proposal cov is 2 x 2 matrix with diagonal 1 and off-diagonal -0.5
-    # This is for updating hyperparameters nu and rho in the MCMC
-    matern_proposal_cov <- diag(2) * 1.5 - 0.5
-    proposal_chol <-
-        0.1 * t(RandomFieldsUtils::cholx(matern_proposal_cov))
+
+    #-----------------------------------------------------------------------
+    # Set up adaptive tuning
+    #-----------------------------------------------------------------------
+    c0 <- 10
+    c1 <- 0.8
+    tune_k <- 2
+    win_len <- min(iters, 50)
+    acpt_rhos <- c(1, rep(NA, win_len - 1))
+    tune_var <- 1
+    acpt_rt_rhos <- 1
+    # acpt_chain <- rep(NA,iters)
+    # tune_var_chain <- rep(NA,iters)
 
     pb <- txtProgressBar(min = 1,
                          max = iters,
@@ -131,47 +131,43 @@ run_sgp_nugget <- function(y,
         tau <- rgamma(1, (n * reps) / 2 + as, SS / 2 + bs)
         SS  <- tau * SS
 
-        # Jointly propose new range and smoothness parameters
-        # Accept or reject based on R (log likelihood ratio)
-        # The proposal takes the log of the range/smoothness (rho and nu both > 0),
-        #   then proposes an update from a normal distribution, then exponentiates
-        #   back. Actually they range and smoothness are proposed together, and are
-        #   the proposal is from a MVNormal where range and smoothness are
-        #   anti-correlated
+        #-----------------------------------------------------------------------
+        # Sampling covariance parameters variable-at-a-time
+        #-----------------------------------------------------------------------
 
+        # First do rho_s
         PLDs_star <- NA
         while(is.na(PLDs_star[1])) {
-            epsilon <- proposal_chol %*% rnorm(2)
-            rhos_star <- exp(log(rhos) + epsilon[1])
-            nus_star <- exp(log(nus) + epsilon[2])
-            PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus_star)
+            rhos_star <- exp(log(rhos) + rnorm(1, 0, sqrt(tune_var)))
+            PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus)
         }
-
-        # And the sum of squares star
         SS_star <- tau * sum(apply(yminusXb, 2, function(X)
             emulator::quad.form(PLDs_star$precision, X)))
 
-        # The acceptance ratio is the log proposal nu over the log current nu
-        #   evaluated at the prior for nu (which is normal)
-        # times the ratio of the log proposal rho over the log current rho
-        #   evaluated at the prior for rho (which is also normal)
-        # times the ratio of the data likelihoods
-        # This is a symmetric proposal
-        # NOTE: this can be adaptively tuned
-        R <- dnorm(log(nus_star), mean_nu, sd_nu, log = T) -
-            dnorm(log(nus), mean_nu, sd_nu, log = T) +
-            dnorm(log(rhos_star), mean_range, sd_range, log = T) -
+        R <- dnorm(log(rhos_star), mean_range, sd_range, log = T) -
             dnorm(log(rhos), mean_range, sd_range, log = T) +
             0.5 * (PLDs_star$ldeterminant - PLDs$ldeterminant) -
             0.5 * (SS_star - SS)
         if (!is.na(exp(R))) {
             if (runif(1) < exp(R)) {
-                nus <- nus_star
                 rhos <- rhos_star
                 PLDs <- PLDs_star
+                acpt_rhos[(i+1) %% win_len] <- 1
+            } else {
+                acpt_rhos[(i+1) %% win_len] <- 0
             }
         }
 
+        #-----------------------------------------------------------------------
+        # Update the tuning variance
+        #-----------------------------------------------------------------------
+        if(i >= 100) {
+            gamma1 <- c0 / (i + tune_k) ^ (c1)
+            acpt_rt_rhos <- mean(acpt_rhos, na.rm = TRUE)
+            tune_var <- update_var(tune_var, acpt_rt_rhos, .3, gamma1)
+            # acpt_chain[i] <- acpt_rt_rhos
+            # tune_var_chain[i] <- tune_var
+        }
 
         #-------------------------------------------------------------
         # Update error variance term
@@ -186,7 +182,7 @@ run_sgp_nugget <- function(y,
 
         beta_chain[i,] <- beta
         param_chain[i,] <-
-            c(1 / sqrt(tau), rhos, nus, 1 / sqrt(errprec))
+            c(1 / sqrt(tau), rhos, 1 / sqrt(errprec))
 
         if (i >= burnin) {
             matern_cov <- fields::Matern(d, range = rhos, smoothness = nus)
@@ -200,5 +196,7 @@ run_sgp_nugget <- function(y,
 
     list("beta" = beta_chain,
          "covar_params" = param_chain,
-         "pred" = ypred[burnin:iters,])
+         "pred" = ypred[burnin:iters,])#,
+         # "acpt_chain" = acpt_chain,
+         # "tune_chain" = tune_var_chain)
 }
