@@ -7,7 +7,7 @@ run_sgp_nugget <- function(y,
                            # fixed value of the log matern smoothness parameter
                            mean_range = 0,
                            # prior mean of the log matern spatial range parameter
-                           sd_range = 1.5,
+                           sd_range = 1,
                            # prior sd of the log matern spatial range parameter
                            init_range = NULL,
                            # init value of the log matern spatial range parameter
@@ -100,8 +100,8 @@ run_sgp_nugget <- function(y,
     acpt_rhos <- c(1, rep(NA, win_len - 1))
     tune_var <- 1
     acpt_rt_rhos <- 1
-    # acpt_chain <- rep(NA,iters)
-    # tune_var_chain <- rep(NA,iters)
+    acpt_chain <- rep(NA,iters)
+    tune_var_chain <- rep(NA,iters)
 
     pb <- txtProgressBar(min = 1,
                          max = iters,
@@ -165,8 +165,8 @@ run_sgp_nugget <- function(y,
             gamma1 <- c0 / (i + tune_k) ^ (c1)
             acpt_rt_rhos <- mean(acpt_rhos, na.rm = TRUE)
             tune_var <- update_var(tune_var, acpt_rt_rhos, .3, gamma1)
-            # acpt_chain[i] <- acpt_rt_rhos
-            # tune_var_chain[i] <- tune_var
+            acpt_chain[i] <- acpt_rt_rhos
+            tune_var_chain[i] <- tune_var
         }
 
         #-------------------------------------------------------------
@@ -196,7 +196,7 @@ run_sgp_nugget <- function(y,
 
     list("beta" = beta_chain,
          "covar_params" = param_chain,
-         "pred" = ypred[burnin:iters,])#,
-         # "acpt_chain" = acpt_chain,
-         # "tune_chain" = tune_var_chain)
+         "pred" = ypred[burnin:iters,],
+         "acpt_chain" = acpt_chain,
+         "tune_chain" = tune_var_chain)
 }

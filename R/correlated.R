@@ -2,11 +2,11 @@ run_sgp_correlated_errs <- function(y,
                         s,
                         X,
                         cutoff = 0, # null is signal values below this, alternative is above
-                        mean_nu = log(1.5), # prior mean of the log matern smoothness parameter
+                        mean_nu = 0, # prior mean of the log matern smoothness parameter
                         sd_nu = 1, # prior sd of the log matern spatial range parameter
                         init_nu_s = NULL, # initial value of the log matern smoothness parameter
                         init_nu_e = NULL, # initial value of the log matern smoothness parameter
-                        mean_range = -1, # prior mean of the log matern spatial range parameter
+                        mean_range = 0, # prior mean of the log matern spatial range parameter
                         sd_range = 1, # prior sd of the log matern spatial range parameter
                         init_range_s = NULL, # init value of the log matern spatial range parameter
                         init_range_e = NULL, # init value of the log matern spatial range parameter
