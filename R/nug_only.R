@@ -5,9 +5,12 @@ run_sgp_nugget <- function(y,
                            # null is signal values below this, alternative is above
                            init_nu = 0.5,
                            # fixed value of the log matern smoothness parameter
-                           mean_range = 0,
-                           # prior mean of the log matern spatial range parameter
-                           sd_range = 1,
+                           # mean_range = 0,
+                           # # prior mean of the log matern spatial range parameter
+                           # sd_range = 1,
+                           # Try a uniform prior on the spatial range (1, max(crd))
+                           min_range = 1,
+                           max_range = NULL,
                            # prior sd of the log matern spatial range parameter
                            init_range = NULL,
                            # init value of the log matern spatial range parameter
@@ -41,6 +44,9 @@ run_sgp_nugget <- function(y,
     #----------------------------------------------------
     # Initial values
     #----------------------------------------------------
+    if(is.null(max_range)) {
+        max_range <- diff(range(s))
+    }
 
     # These all default to NULL
     beta <- init_beta
@@ -138,14 +144,28 @@ run_sgp_nugget <- function(y,
         # First do rho_s
         PLDs_star <- NA
         while(is.na(PLDs_star[1])) {
-            rhos_star <- exp(log(rhos) + rnorm(1, 0, sqrt(tune_var)))
+            # This takes the log of rhos, does a normal random walk proposal,
+            #   and then exponentiates back
+            # rhos_star <- exp(log(rhos) + rnorm(1, 0, sqrt(tune_var)))
+
+            # Try instead to propose on the current scale,
+            #   and just reject if rhos is negative (hopefully more stable)
+            rhos_star <- rhos + rnorm(1, 0, sqrt(tune_var))
+            while(rhos_star <= 0) {
+                rhos_star <- rhos + rnorm(1, 0, sqrt(tune_var))
+            }
+
             PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus)
         }
         SS_star <- tau * sum(apply(yminusXb, 2, function(X)
             emulator::quad.form(PLDs_star$precision, X)))
 
-        R <- dnorm(log(rhos_star), mean_range, sd_range, log = T) -
-            dnorm(log(rhos), mean_range, sd_range, log = T) +
+        # R <- dnorm(log(rhos_star), mean_range, sd_range, log = T) -
+        #     dnorm(log(rhos), mean_range, sd_range, log = T) +
+        #     0.5 * (PLDs_star$ldeterminant - PLDs$ldeterminant) -
+        #     0.5 * (SS_star - SS)
+        R <- dunif(rhos_star, min_range, max_range, log = T) -
+            dunif(rhos, min_range, max_range, log = T) +
             0.5 * (PLDs_star$ldeterminant - PLDs$ldeterminant) -
             0.5 * (SS_star - SS)
         if (!is.na(exp(R))) {

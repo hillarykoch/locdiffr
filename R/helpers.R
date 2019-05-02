@@ -34,8 +34,8 @@ make_pred <- function(y, matern_cov, tau) {
 }
 
 update_var <- function(cur_var, acpt_rt, opt_rt = .3, gamma1) {
-    min(exp(log(cur_var) + gamma1 * (acpt_rt - opt_rt)), 25)
-    #exp(log(cur_var) + gamma1 * (acpt_rt - opt_rt))
+    #min(exp(log(cur_var) + gamma1 * (acpt_rt - opt_rt)), 25)
+    exp(log(cur_var) + gamma1 * (acpt_rt - opt_rt))
 }
 
 extend_mcmc <- function(fit,
