@@ -151,7 +151,7 @@ run_sgp_nugget <- function(y,
             # Try instead to propose on the current scale,
             #   and just reject if rhos is negative (hopefully more stable)
             rhos_star <- rhos + rnorm(1, 0, sqrt(tune_var))
-            while(rhos_star <= min_range | rho_star > max_range) {
+            while(rhos_star <= min_range | rhos_star > max_range) {
                 rhos_star <- rhos + rnorm(1, 0, sqrt(tune_var))
             }
 
