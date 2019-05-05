@@ -12,7 +12,7 @@ run_sgp_nugget <- function(y,
                            min_range = 1,
                            max_range = NULL,
                            # prior sd of the log matern spatial range parameter
-                           init_range = NULL,
+                           init_range = 5,
                            # init value of the log matern spatial range parameter
                            as = 2,
                            # the prior for the variance is InvG(as,bs)
