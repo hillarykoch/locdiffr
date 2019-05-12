@@ -2,20 +2,18 @@ run_sgp_correlated_errs <- function(y,
                         s,
                         X,
                         cutoff = 0, # null is signal values below this, alternative is above
-                        mean_nu = 0, # prior mean of the log matern smoothness parameter
-                        sd_nu = 1, # prior sd of the log matern spatial range parameter
-                        init_nu_s = NULL, # initial value of the log matern smoothness parameter
-                        init_nu_e = NULL, # initial value of the log matern smoothness parameter
-                        mean_range = 0, # prior mean of the log matern spatial range parameter
-                        sd_range = 1, # prior sd of the log matern spatial range parameter
+                        init_nus = 0.5,
+                        init_nue = 0.5,
+                        min_range = 1, # prior mean of the log matern spatial range parameter
+                        max_range = NULL,
                         init_range_s = NULL, # init value of the log matern spatial range parameter
                         init_range_e = NULL, # init value of the log matern spatial range parameter
                         init_r = NULL, # how much of the error process is correlated vs iid noise
                         sd_r = 3, # standard deviation on prior for log(r/(1-r))
-                        as = 5,  # the prior for the variance is InvG(as,bs)
+                        as = 2,  # the prior for the variance is InvG(as,bs)
                         bs = 2,
                         tauinv = NULL, # initial value of the variance term in matern cov
-                        sd_beta = 10, # regression coefficients have N(0, sd_beta) priors
+                        sd_beta = 3, # regression coefficients have N(0, sd_beta) priors
                         init_beta = NULL, # initial value of regression coefs
                         iters = 500,
                         burnin = 100) {
@@ -36,14 +34,17 @@ run_sgp_correlated_errs <- function(y,
     #----------------------------------------------------
     # Initial values
     #----------------------------------------------------
+    if(is.null(max_range)) {
+        max_range <- diff(range(s))
+    }
 
     # These all default to NULL
     beta <- init_beta
     r <- init_r
     rhos <- init_range_s
     rhoe <- init_range_e
-    nus <- init_nu_s
-    nue <- init_nu_e
+    nus <- init_nus
+    nue <- init_nue
 
     # Get initial regression values from a simple linear model fit
     if(reps > 1) {
@@ -95,14 +96,22 @@ run_sgp_correlated_errs <- function(y,
 
     # store regression coefficients and covariance params
     beta_chain <- matrix(0, iters, p)
-    param_chain <- matrix(0, iters, 6)
+    param_chain <- matrix(0, iters, 4)
     colnames(param_chain) <-
-        c("sigma", "r", "range_s", "nu_s", "range_e", "nu_e")
+        c("sigma", "r", "range_s", "range_e")
 
-    # matern_proposal cov is 2 x 2 matrix with diagonal 1 and off-diagonal -0.5
-    # This is for updating hyperparameters nu and rho in the MCMC
-    matern_proposal_cov <- diag(2) * 1.5 - 0.5
-    proposal_chol <- 0.1 * t(RandomFieldsUtils::cholx(matern_proposal_cov))
+    #-----------------------------------------------------------------------
+    # Set up adaptive tuning
+    #-----------------------------------------------------------------------
+    c0 <- 10
+    c1 <- 0.8
+    tune_k <- 2
+    win_len <- min(iters, 50)
+    acpt_rhos <- acpt_rhoe <- c(1, rep(NA, win_len - 1))
+    tune_vars <- tune_vare <- 1
+    acpt_rt_rhos <- acpt_rt_rhoe <- 1
+    acpt_chain <- tune_var_chain <- matrix(NA, nrow = iters, ncol = 2)
+    colnames(acpt_chain) <- colnames(tune_var_chain) <- c("rhos", "rhoe")
 
     pb <- txtProgressBar(min = 1, max = iters, style = 3)
     for (i in 1:iters) {
@@ -128,44 +137,33 @@ run_sgp_correlated_errs <- function(y,
         tau <- rgamma(1, (n * reps) / 2 + as, SS / 2 + bs)
         SS  <- tau * SS
 
-        # Jointly propose new range and smoothness parameters
-        # Accept or reject based on R (log likelihood ratio)
-        # The proposal takes the log of the range/smoothness (rho and nu both > 0),
-        #   then proposes an update from a normal distribution, then exponentiates
-        #   back. Actually they range and smoothness are proposed together, and are
-        #   the proposal is from a MVNormal where range and smoothness are
-        #   anti-correlated
-
+        #-----------------------------------------------------------------------
+        # Sampling range parameter
+        #-----------------------------------------------------------------------
         PLDs_star <- NA
         while(is.na(PLDs_star[1])) {
-            epsilon <- proposal_chol %*% rnorm(2)
-            rhos_star <- exp(log(rhos) + epsilon[1])
-            nus_star <- exp(log(nus) + epsilon[2])
-            PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus_star)
+            rhos_star <- rhos + rnorm(1, 0, sqrt(tune_vars))
+            while(rhos_star < 1 | rhos_star > max_range) {
+                rhos_star <- rhos + rnorm(1, 0, sqrt(tune_vars))
+            }
+            PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus)
         }
 
         # And the sum of squares star
         SS_star <- tau * sum(apply(yminusXb, 2, function(X)
                             emulator::quad.form(PLDs_star$precision, X)))
 
-        # The acceptance ratio is the log proposal nu over the log current nu
-        #   evaluated at the prior for nu (which is normal)
-        # times the ratio of the log proposal rho over the log current rho
-        #   evaluated at the prior for rho (which is also normal)
-        # times the ratio of the data likelihoods
-        # This is a symmetric proposal
-        # NOTE: this can be adaptively tuned
-        R <- dnorm(log(nus_star), mean_nu, sd_nu, log = T) -
-            dnorm(log(nus), mean_nu, sd_nu, log = T) +
-            dnorm(log(rhos_star), mean_range, sd_range, log = T) -
-            dnorm(log(rhos), mean_range, sd_range, log = T) +
+        R <- dunif(rhos_star, min_range, max_range, log = T) -
+            dunif(rhos, min_range, max_range, log = T) +
             0.5 * (PLDs_star$ldeterminant - PLDs$ldeterminant) -
             0.5 * (SS_star - SS)
         if (!is.na(exp(R))) {
             if (runif(1) < exp(R)) {
-                nus <- nus_star
                 rhos <- rhos_star
                 PLDs <- PLDs_star
+                acpt_rhos[(i+1) %% win_len] <- 1
+            } else {
+                acpt_rhos[(i+1) %% win_len] <- 0
             }
         }
 
@@ -180,7 +178,7 @@ run_sgp_correlated_errs <- function(y,
         #   a normal distribution whose result can be transformed back
         SS <- sum(apply(yminusXb, 2, function(X)
             emulator::quad.form(PLDe$precision, X)))
-        lr     <- log(r / (1 - r))
+        lr <- log(r / (1 - r))
 
         PLDe_star <- NA
         while(is.na(PLDe_star[1])) {
@@ -213,30 +211,49 @@ run_sgp_correlated_errs <- function(y,
         # Sometimes the proposal is bad -- this prevents the program from dying
         PLDe_star <- NA
         while(is.na(PLDe_star[1])) {
-            epsilon <- proposal_chol %*% rnorm(2)
-            rhoe_star <- exp(log(rhoe) + epsilon[1])
-            nue_star <- exp(log(nue) + epsilon[2])
-            PLDe_star <- get_prec_and_det(d, r, rhoe_star, nue_star)
+            rhoe_star <- rhoe + rnorm(1, 0, sqrt(tune_vare))
+            while(rhoe_star < 1 | rhoe_star > max_range) {
+                rhoe_star <- rhoe + rnorm(1, 0, sqrt(tune_vare))
+            }
+
+            PLDe_star <- get_prec_and_det(d, r, rhoe_star, nue)
         }
 
         SS_star <- sum(apply(yminusXb, 2, function(X)
             emulator::quad.form(PLDe_star$precision, X)))
-        R <- dnorm(log(nue_star), mean_nu, sd_nu, log = T) -
-            dnorm(log(nue), mean_nu, sd_nu, log = T) +
-            dnorm(log(rhoe_star), mean_range, sd_range, log = T) -
-            dnorm(log(rhoe), mean_range, sd_range, log = T) +
+        R <- dunif(rhoe_star, min_range, max_range, log = T) -
+            dunif(rhoe, min_range, max_range, log = T) +
             0.5 * (PLDe_star$ldeterminant - PLDe$ldeterminant) -
             0.5 * (SS_star - SS)
+
         if (!is.na(exp(R))) {
             if (runif(1) < exp(R)) {
-                nue <- nue_star
                 rhoe <- rhoe_star
                 PLDe <- PLDe_star
+                acpt_rhoe[(i+1) %% win_len] <- 1
+            } else {
+                acpt_rhoe[(i+1) %% win_len] <- 0
             }
         }
 
+        #-----------------------------------------------------------------------
+        # Update the tuning variance
+        #-----------------------------------------------------------------------
+        if(i >= 100) {
+            gamma1 <- c0 / (i + tune_k) ^ (c1)
+            acpt_rt_rhos <- mean(acpt_rhos, na.rm = TRUE)
+            acpt_rt_rhoe <- mean(acpt_rhoe, na.rm = TRUE)
+            tune_vars <- update_var(tune_vars, acpt_rt_rhos, .3, gamma1)
+            tune_vare <- update_var(tune_vare, acpt_rt_rhos, .3, gamma1)
+            acpt_chain[i,"rhos"] <- acpt_rt_rhos
+            acpt_chain[i,"rhoe"] <- acpt_rt_rhoe
+            tune_var_chain[i, "rhos"] <- tune_vars
+            tune_var_chain[i, "rhoe"] <- tune_vare
+        }
+
+
         beta_chain[i, ] <- beta
-        param_chain[i, ] <- c(1 / sqrt(tau), r, rhos, nus, rhoe, nue)
+        param_chain[i, ] <- c(1 / sqrt(tau), r, rhos, rhoe)
 
         if (i >= burnin) {
             matern_cov <- fields::Matern(d, range = rhos, smoothness = nus)
@@ -247,5 +264,9 @@ run_sgp_correlated_errs <- function(y,
     }
     close(pb)
 
-    list("beta" = beta_chain, "covar_params" = param_chain, "pred" = ypred[burnin:iters, ])
+    list("beta" = beta_chain,
+         "covar_params" = param_chain,
+         "pred" = ypred[burnin:iters,],
+         "acpt_chain" = acpt_chain,
+         "tune_chain" = tune_var_chain)
 }
