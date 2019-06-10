@@ -73,7 +73,7 @@ run_sgp_nugget <- function(y,
 
     # init value of the log matern spatial range parameter
     if (is.null(rhos)) {
-        rhos  <- unname(quantile(d, 0.1))
+        rhos  <- (max_range - 1)/2#unname(quantile(d, 0.1))
     }
 
     # tau is precision of matern covariance function

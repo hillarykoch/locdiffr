@@ -63,10 +63,10 @@ run_sgp_correlated_errs <- function(y,
 
     # init value of the log matern spatial range parameter
     if (is.null(rhos)) {
-        rhos <- unname(quantile(d, 0.1))
+        rhos <- (max_range - 1)/2#unname(quantile(d, 0.1))
     }
     if (is.null(rhoe)) {
-        rhoe <- unname(quantile(d, 0.1))
+        rhoe <- (max_range - 1)/2#unname(quantile(d, 0.1))
     }
 
     # initialize with 80% of errors being correlated as opposed to the 20% iid noise
