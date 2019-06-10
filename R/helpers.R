@@ -38,6 +38,17 @@ update_var <- function(cur_var, acpt_rt, opt_rt = .3, gamma1) {
     exp(log(cur_var) + gamma1 * (acpt_rt - opt_rt))
 }
 
+# Compute upper bound on the prior for the spatial range parameter
+get_max_range <- function(dat, max_max_range) {
+    autocor <- as.vector(acf(rowMeans(dat), plot = FALSE, lag.max = max_max_range)$acf)
+    idx <- sapply(1:(max_max_range-1), function(X) autocor[X] < autocor[X+1]) & autocor[1:(max_max_range-1)] < .05
+    if(any(idx)) {
+        which(idx)[1]
+    } else {
+        max_max_range
+    }
+}
+
 extend_mcmc <- function(fit,
                         y,
                         s,

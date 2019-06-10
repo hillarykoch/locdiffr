@@ -10,7 +10,8 @@ run_sgp_nugget <- function(y,
                            # sd_range = 1,
                            # Try a uniform prior on the spatial range (1, max(crd))
                            min_range = 1,
-                           max_range = NULL,
+                           # max_range = NULL,
+                           max_max_range = NULL,
                            # prior sd of the log matern spatial range parameter
                            init_range = 5,
                            # init value of the log matern spatial range parameter
@@ -44,9 +45,10 @@ run_sgp_nugget <- function(y,
     #----------------------------------------------------
     # Initial values
     #----------------------------------------------------
-    if(is.null(max_range)) {
-        max_range <- diff(range(s))
-    }
+    # if(is.null(max_range)) {
+    #     max_range <- diff(range(s))
+    # }
+    max_range <- get_max_range(y, max_max_range)
 
     # These all default to NULL
     beta <- init_beta
