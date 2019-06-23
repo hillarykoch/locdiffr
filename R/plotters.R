@@ -1,40 +1,3 @@
-# setwd("~/Box Sync/School/research - Qunhua/taos_project/contrib/figs_etc/")
-# 
-# library(magrittr)
-# library(readr)
-# library(dplyr)
-# library(fda)
-# library(ggplot2)
-# library(cowplot)
-# library(purrr)
-# 
-# KO1 <-
-#     as.matrix(
-#         read.delim(
-#             "../../received_progress/processedData/G1E-ER4-C8BRD2-KO-uninduced.Rep2.chr19.matrix"
-#         )
-#     )
-# ui1 <-
-#     as.matrix(
-#         read.delim(
-#             "../../received_progress/processedData/G1E-ER4-uninduced.Rep1.chr19.matrix"
-#         )
-#     )
-# 
-# scc_path <- "../fits/20/scc_C8_chr19_h2.Rdata"
-# mcmc_path <- "../fits/20/C8_10bf_h2.Rdata"
-# h <- 2
-# nb <- 10
-# load(mcmc_path)
-# load(scc_path)
-# 
-# # BRD2 ChIP peaks (2-column matrix/df/tbl of peak locations)
-# peaks <-
-#     readr::read_tsv("GSM1532602_530.broadpeak", col_names = FALSE) %>%
-#     dplyr::filter(X1 == "chr19") %>%
-#     select(X2, X3)
-
-
 plot_rejections <-
     function(fit,
              sccs,
@@ -68,7 +31,7 @@ plot_rejections <-
         for (i in 1:nrow(theta)) {
             theta[i,] <- fit$pred[i + burnin,] < X %*% fit$beta[i + burnin,]
         }
-        
+
         if(is.null(num_rejections)) {
             #--------------------------------------------------
             # Compute rejections
@@ -78,10 +41,10 @@ plot_rejections <-
                     alpha = alpha,
                     beta = 1 - alpha,
                     nthresh = 100)$reject
-            
+
             peakdf <- tibble("y" = rep(peak_x, times = nrow(peaks)),
-                             "peak" = rowMeans(peaks) / resolution))
-            
+                             "peak" = rowMeans(peaks) / resolution)
+
             ggdf <- tibble(
                 crd = sccs$z1$crd,
                 lb = apply(fit$pred[(burnin + 1):nrow(fit$pred),], 2, function(X)
@@ -94,7 +57,7 @@ plot_rejections <-
                 mean_func = (X %*% colMeans(fit$beta[(burnin + 1):nrow(fit$beta),]))[, 1],
                 z1 = sccs$z1$z_s
             )
-            
+
             #--------------------------------------------------
             # Generalize function to any number of replicates
             if (length(sccs) > 1) {
@@ -112,7 +75,7 @@ plot_rejections <-
                   "mean_func",
                   paste0("z", seq_along(sccs)))
             names(ggdf) <- nm
-            
+
             CIdf <- dplyr::select(ggdf, crd, lb, ub)
             line_molten <-
                 dplyr::select(ggdf, crd, 7:ncol(ggdf), z_star) %>%
@@ -128,7 +91,7 @@ plot_rejections <-
                        y = ggdf$z_star[ggdf$FDX],
                        id = "FDX")
             rejdf <- rbind(fdrdf, fdxdf)
-            
+
             ggplot(CIdf, aes(x = crd, ymin = lb, ymax = ub)) +
                 geom_ribbon(color = "grey70", alpha = .4) +
                 geom_line(
@@ -178,11 +141,11 @@ plot_rejections <-
                 xlab("loc") + ylab("z")
         } else {
             rej <- dplyr::between(rank(-colMeans(theta)), 1, num_rejections)
-            
+
             peakdf <- tibble("y" = rep(peak_x, times = nrow(peaks)),
                              "x" = rowMeans(peaks) / resolution,
                              "id" = "BRD2 peaks")
-            
+
             ggdf <- tibble(
                 crd = sccs$z1$crd,
                 lb = apply(fit$pred[(burnin + 1):nrow(fit$pred),], 2, function(X)
@@ -194,7 +157,7 @@ plot_rejections <-
                 mean_func = (X %*% colMeans(fit$beta[(burnin + 1):nrow(fit$beta),]))[, 1],
                 z1 = sccs$z1$z_s
             )
-            
+
             #--------------------------------------------------
             # Generalize function to any number of replicates
             if (length(sccs) > 1) {
@@ -211,7 +174,7 @@ plot_rejections <-
                   "mean_func",
                   paste0("z", seq_along(sccs)))
             names(ggdf) <- nm
-            
+
             CIdf <- dplyr::select(ggdf, crd, lb, ub)
             line_molten <-
                 dplyr::select(ggdf, crd, 7:ncol(ggdf), z_star) %>%
@@ -223,7 +186,7 @@ plot_rejections <-
                        y = ggdf$z_star[ggdf$rejections],
                        id = "rejections")
             pointdf <- rbind(rejdf, peakdf)
-            
+
             ggplot(CIdf, aes(x = crd, ymin = lb, ymax = ub)) +
                 geom_ribbon(color = "grey70", alpha = .4) +
                 geom_line(
@@ -489,42 +452,3 @@ add_rejections <-
                 size = 1.1
             )
     }
-
-
-
-# #--------------------------------------------------
-# # Test stuff
-# plot_rejections(
-#     fit,
-#     sccs,
-#     h = 2,
-#     nb = nb,
-#     peaks = peaks,
-#     burnin = 0,
-#     alpha = 0.2
-# )
-# ppp <-
-#     plot_heat_rejections(
-#         hic1 = KO1,
-#         hic2 = ui1,
-#         fit = fit1,
-#         zoom = 200:400,
-#         h = h,
-#         nb = nb,
-#         win_size = 20,
-#         sccs = sccs,
-#         method = "FDR",
-#         alpha = 0.2
-#     )
-# p3 <- add_rejections(
-#     diffplot = p2,#ppp[[3]],
-#     fit = fit3,
-#     zoom = 200:400,
-#     nb = nb,
-#     win_size = 5,
-#     sccs = sccs,
-#     method = "FDR",
-#     burnin = 0,
-#     alpha = 0.2,
-#     rej_color = "black"
-# )
