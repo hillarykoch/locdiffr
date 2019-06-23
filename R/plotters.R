@@ -80,8 +80,7 @@ plot_rejections <-
                     nthresh = 100)$reject
             
             peakdf <- tibble("y" = rep(peak_x, times = nrow(peaks)),
-                             #"peak" = rowMeans(peaks) / resolution)
-                             "peak" = peaks$X2 / resolution)
+                             "peak" = rowMeans(peaks) / resolution))
             
             ggdf <- tibble(
                 crd = sccs$z1$crd,
