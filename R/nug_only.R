@@ -26,8 +26,9 @@ run_sgp_nugget <- function(y,
                            # regression coefficients have N(0, sd_beta) priors
                            init_beta = NULL,
                            # initial value of regression coefs
+                           cpp = TRUE,
                            iters = 500,
-                           burnin = 100) {
+                           burnin = 1) {
     # number of observation locations, number of process replicates (sample size)
     n <- nrow(y)
     reps <- ncol(y)
@@ -45,9 +46,9 @@ run_sgp_nugget <- function(y,
     #----------------------------------------------------
     # Initial values
     #----------------------------------------------------
-    # if(is.null(max_range)) {
-    #     max_range <- diff(range(s))
-    # }
+    if(is.null(max_max_range)) {
+        max_max_range <- diff(range(s))
+    }
     max_range <- get_max_range(y, max_max_range)
 
     # These all default to NULL
@@ -108,117 +109,150 @@ run_sgp_nugget <- function(y,
     acpt_rhos <- c(1, rep(NA, win_len - 1))
     tune_var <- 1
     acpt_rt_rhos <- 1
-    acpt_chain <- rep(NA,iters)
-    tune_var_chain <- rep(NA,iters)
+    acpt_chain <- rep(NA, iters - 99)
+    tune_var_chain <- rep(NA, iters - 99)
 
-    pb <- txtProgressBar(min = 1,
-                         max = iters,
-                         style = 3)
-    for (i in 1:iters) {
-        #-------------------------------------------------------------
-        # Update regression coefficients
-        #-------------------------------------------------------------
-        premultX <-
-            reps * tau * tX %*% (PLDs$precision + diag(errprec, n))
-        varterm <- cinv(precision_beta + premultX %*% X)
-        muterm <- premultX %*% rowMeans(y)
+    if(cpp) {
+        out <- crun_sgp_nugget(
+            reps,
+            n,
+            p,
+            tau,
+            X,
+            PLDs$precision,
+            PLDs$ldeterminant,
+            errprec,
+            precision_beta,
+            y,
+            iters,
+            as,
+            bs,
+            rhos,
+            nus,
+            tune_var,
+            min_range,
+            max_range,
+            win_len,
+            d,
+            acpt_rhos,
+            c0,
+            c1,
+            tune_k,
+            acpt_chain,
+            tune_var_chain
+        )
+        colnames(out$covar_params) <- c("sigma", "range_s", "err_sd")
+        return(out)
+    } else {
+        pb <- txtProgressBar(min = 1,
+                             max = iters,
+                             style = 3)
+        for (i in 1:iters) {
+            #-------------------------------------------------------------
+            # Update regression coefficients
+            #-------------------------------------------------------------
+            premultX <-
+                reps * tau * tX %*% (PLDs$precision + diag(errprec, n))
+            varterm <- cinv(precision_beta + premultX %*% X)
+            muterm <- premultX %*% rowMeans(y)
 
-        # Sample new betas from this full conditional
-        beta <-
-            varterm %*% muterm + t(RandomFieldsUtils::cholx(varterm)) %*% rnorm(p)
-        Xb   <- as.vector(X %*% beta)
+            # Sample new betas from this full conditional
+            beta <-
+                varterm %*% muterm + t(RandomFieldsUtils::cholx(varterm)) %*% rnorm(p)
+            Xb   <- as.vector(X %*% beta)
 
-        #-------------------------------------------------------------
-        # Update covariance parameters for the spatial signal process
-        #-------------------------------------------------------------
+            #-------------------------------------------------------------
+            # Update covariance parameters for the spatial signal process
+            #-------------------------------------------------------------
 
-        # tau ~ Gamma
-        yminusXb <- sweep(y, 1, Xb)
-        SS <- tau * sum(apply(yminusXb, 2, function(X)
-            emulator::quad.form(PLDs$precision, X)))
-        tau <- rgamma(1, (n * reps) / 2 + as, SS / 2 + bs)
-        SS  <- tau * SS
+            # tau ~ Gamma
+            yminusXb <- sweep(y, 1, Xb)
+            SS <- tau * sum(apply(yminusXb, 2, function(X)
+                emulator::quad.form(PLDs$precision, X)))
+            tau <- rgamma(1, (n * reps) / 2 + as, SS / 2 + bs)
+            SS  <- tau * SS
 
-        #-----------------------------------------------------------------------
-        # Sampling covariance parameters variable-at-a-time
-        #-----------------------------------------------------------------------
+            #-----------------------------------------------------------------------
+            # Sampling covariance parameters variable-at-a-time
+            #-----------------------------------------------------------------------
 
-        # First do rho_s
-        PLDs_star <- NA
-        while(is.na(PLDs_star[1])) {
-            # This takes the log of rhos, does a normal random walk proposal,
-            #   and then exponentiates back
-            # rhos_star <- exp(log(rhos) + rnorm(1, 0, sqrt(tune_var)))
+            # First do rho_s
+            PLDs_star <- NA
+            while(is.na(PLDs_star[1])) {
+                # This takes the log of rhos, does a normal random walk proposal,
+                #   and then exponentiates back
+                # rhos_star <- exp(log(rhos) + rnorm(1, 0, sqrt(tune_var)))
 
-            # Try instead to propose on the current scale,
-            #   and just reject if rhos is negative (hopefully more stable)
-            rhos_star <- rhos + rnorm(1, 0, sqrt(tune_var))
-            while(rhos_star <= min_range | rhos_star > max_range) {
+                # Try instead to propose on the current scale,
+                #   and just reject if rhos is negative (hopefully more stable)
                 rhos_star <- rhos + rnorm(1, 0, sqrt(tune_var))
+                while(rhos_star <= min_range | rhos_star > max_range) {
+                    rhos_star <- rhos + rnorm(1, 0, sqrt(tune_var))
+                }
+
+                PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus)
+            }
+            SS_star <- tau * sum(apply(yminusXb, 2, function(X)
+                emulator::quad.form(PLDs_star$precision, X)))
+
+            # R <- dnorm(log(rhos_star), mean_range, sd_range, log = T) -
+            #     dnorm(log(rhos), mean_range, sd_range, log = T) +
+            #     0.5 * (PLDs_star$ldeterminant - PLDs$ldeterminant) -
+            #     0.5 * (SS_star - SS)
+            R <- dunif(rhos_star, min_range, max_range, log = T) -
+                dunif(rhos, min_range, max_range, log = T) +
+                0.5 * (PLDs_star$ldeterminant - PLDs$ldeterminant) -
+                0.5 * (SS_star - SS)
+            if (!is.na(exp(R))) {
+                if (runif(1) < exp(R)) {
+                    rhos <- rhos_star
+                    PLDs <- PLDs_star
+                    acpt_rhos[(i+1) %% win_len] <- 1
+                } else {
+                    acpt_rhos[(i+1) %% win_len] <- 0
+                }
             }
 
-            PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus)
-        }
-        SS_star <- tau * sum(apply(yminusXb, 2, function(X)
-            emulator::quad.form(PLDs_star$precision, X)))
-
-        # R <- dnorm(log(rhos_star), mean_range, sd_range, log = T) -
-        #     dnorm(log(rhos), mean_range, sd_range, log = T) +
-        #     0.5 * (PLDs_star$ldeterminant - PLDs$ldeterminant) -
-        #     0.5 * (SS_star - SS)
-        R <- dunif(rhos_star, min_range, max_range, log = T) -
-            dunif(rhos, min_range, max_range, log = T) +
-            0.5 * (PLDs_star$ldeterminant - PLDs$ldeterminant) -
-            0.5 * (SS_star - SS)
-        if (!is.na(exp(R))) {
-            if (runif(1) < exp(R)) {
-                rhos <- rhos_star
-                PLDs <- PLDs_star
-                acpt_rhos[(i+1) %% win_len] <- 1
-            } else {
-                acpt_rhos[(i+1) %% win_len] <- 0
+            #-----------------------------------------------------------------------
+            # Update the tuning variance
+            #-----------------------------------------------------------------------
+            if(i >= 100) {
+                gamma1 <- c0 / (i + tune_k) ^ (c1)
+                acpt_rt_rhos <- mean(acpt_rhos, na.rm = TRUE)
+                tune_var <- update_var(tune_var, acpt_rt_rhos, .3, gamma1)
+                acpt_chain[i-99] <- acpt_rt_rhos
+                tune_var_chain[i-99] <- tune_var
             }
+
+            #-------------------------------------------------------------
+            # Update error variance term
+            #-------------------------------------------------------------
+
+            # errprec ~ Gamma
+            yminusXb <- sweep(y, 1, Xb)
+            SSe <-
+                errprec * sum(apply(yminusXb, 2, function(Y)
+                    t(Y) %*% Y))
+            errprec <- rgamma(1, (n * reps) / 2 + as, SSe / 2 + bs)
+
+            beta_chain[i,] <- beta
+            param_chain[i,] <-
+                c(1 / sqrt(tau), rhos, 1 / sqrt(errprec))
+
+            if (i >= burnin) {
+                matern_cov <- fields::Matern(d, range = rhos, smoothness = nus)
+                ypred[i,] <-
+                    X %*% beta + make_pred(y - Xb, matern_cov, tau)
+            }
+
+            setTxtProgressBar(pb, i)
         }
+        close(pb)
 
-        #-----------------------------------------------------------------------
-        # Update the tuning variance
-        #-----------------------------------------------------------------------
-        if(i >= 100) {
-            gamma1 <- c0 / (i + tune_k) ^ (c1)
-            acpt_rt_rhos <- mean(acpt_rhos, na.rm = TRUE)
-            tune_var <- update_var(tune_var, acpt_rt_rhos, .3, gamma1)
-            acpt_chain[i] <- acpt_rt_rhos
-            tune_var_chain[i] <- tune_var
-        }
-
-        #-------------------------------------------------------------
-        # Update error variance term
-        #-------------------------------------------------------------
-
-        # errprec ~ Gamma
-        yminusXb <- sweep(y, 1, Xb)
-        SSe <-
-            errprec * sum(apply(yminusXb, 2, function(Y)
-                t(Y) %*% Y))
-        errprec <- rgamma(1, (n * reps) / 2 + as, SSe / 2 + bs)
-
-        beta_chain[i,] <- beta
-        param_chain[i,] <-
-            c(1 / sqrt(tau), rhos, 1 / sqrt(errprec))
-
-        if (i >= burnin) {
-            matern_cov <- fields::Matern(d, range = rhos, smoothness = nus)
-            ypred[i,] <-
-                X %*% beta + make_pred(y - Xb, matern_cov, tau)
-        }
-
-        setTxtProgressBar(pb, i)
+        list("beta" = beta_chain,
+             "covar_params" = param_chain,
+             "pred" = ypred[burnin:iters,],
+             "acpt_chain" = acpt_chain,
+             "tune_chain" = tune_var_chain)
     }
-    close(pb)
-
-    list("beta" = beta_chain,
-         "covar_params" = param_chain,
-         "pred" = ypred[burnin:iters,],
-         "acpt_chain" = acpt_chain,
-         "tune_chain" = tune_var_chain)
 }
