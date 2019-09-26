@@ -1,16 +1,8 @@
 run_sgp_nugget <- function(y,
                            s,
                            X,
-                           cutoff = 0,
-                           # null is signal values below this, alternative is above
                            init_nu = 0.5,
-                           # fixed value of the log matern smoothness parameter
-                           # mean_range = 0,
-                           # # prior mean of the log matern spatial range parameter
-                           # sd_range = 1,
-                           # Try a uniform prior on the spatial range (1, max(crd))
                            min_range = 1,
-                           # max_range = NULL,
                            max_max_range = NULL,
                            # prior sd of the log matern spatial range parameter
                            init_range = 5,

@@ -1,11 +1,9 @@
 run_sgp_correlated_errs <- function(y,
                         s,
                         X,
-                        cutoff = 0, # null is signal values below this, alternative is above
                         init_nus = 0.5,
                         init_nue = 0.5,
                         min_range = 1, # prior mean of the log matern spatial range parameter
-                        #max_range = NULL,
                         max_max_range = NULL, # For computing the upper bound on the prior on the spatial range parameter
                         init_range_s = NULL, # init value of the log matern spatial range parameter
                         init_range_e = NULL, # init value of the log matern spatial range parameter
