@@ -288,7 +288,6 @@ Rcpp::List crun_sgp_correlated(
         double PLDs_ldet,
         arma::mat PLDe_precision,
         double PLDe_ldet,
-        double errprec,
         arma::mat precision_beta,
         arma::mat y,
         int iters,

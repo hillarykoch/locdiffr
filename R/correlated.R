@@ -116,7 +116,7 @@ run_sgp_correlated_errs <- function(y,
 
     if(cpp) {
         out <- crun_sgp_correlated(reps, n, p, tau, X, PLDs$precision, PLDs$ldeterminant,
-                            PLDe$precision, PLDe$ldeterminant, errprec, precision_beta,
+                            PLDe$precision, PLDe$ldeterminant, precision_beta,
                             y, iters, as, bs, rhos, nus, rhoe, nue, r, sd_r, tune_vars,
                             tune_vare, min_range, max_range, win_len, d, acpt_rhos,
                             acpt_rhoe, c0, c1, tune_k, acpt_chain, tune_var_chain)
@@ -221,6 +221,10 @@ run_sgp_correlated_errs <- function(y,
 
             # Sometimes the proposal is bad -- this prevents the program from dying
             PLDe_star <- NA
+            
+            # trunc_runife <- runif(1, pnorm(-(rhoe-min_range), mean = 0, sd = sqrt(tune_vare)), pnorm(max_range-rhoe, mean = 0, sd = sqrt(tune_vare)))
+            # qnorm(trunc_runife, mean = 0, sd = sqrt(tune_vare))
+            
             while(is.na(PLDe_star[1])) {
                 rhoe_star <- rhoe + rnorm(1, 0, sqrt(tune_vare))
                 while(rhoe_star < 1 | rhoe_star > max_range) {
