@@ -256,10 +256,10 @@ run_sgp_correlated_errs <- function(y,
                 acpt_rt_rhoe <- mean(acpt_rhoe, na.rm = TRUE)
                 tune_vars <- update_var(tune_vars, acpt_rt_rhos, .3, gamma1)
                 tune_vare <- update_var(tune_vare, acpt_rt_rhoe, .3, gamma1)
-                acpt_chain[i,"rhos"] <- acpt_rt_rhos
-                acpt_chain[i,"rhoe"] <- acpt_rt_rhoe
-                tune_var_chain[i, "rhos"] <- tune_vars
-                tune_var_chain[i, "rhoe"] <- tune_vare
+                acpt_chain[i-99,"rhos"] <- acpt_rt_rhos
+                acpt_chain[i-99,"rhoe"] <- acpt_rt_rhoe
+                tune_var_chain[i-99, "rhos"] <- tune_vars
+                tune_var_chain[i-99, "rhoe"] <- tune_vare
             }
 
 
