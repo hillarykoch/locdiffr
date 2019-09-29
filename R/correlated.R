@@ -16,7 +16,7 @@ run_sgp_correlated_errs <- function(y,
                         init_beta = NULL, # initial value of regression coefs
                         cpp = TRUE,
                         iters = 500,
-                        burnin = 1) {
+                        burnin = 0) {
     # number of observation locations, number of process replicates (sample size)
     n <- nrow(y)
     reps <- ncol(y)
@@ -151,14 +151,19 @@ run_sgp_correlated_errs <- function(y,
             #-----------------------------------------------------------------------
             # Sampling range parameter
             #-----------------------------------------------------------------------
-            PLDs_star <- NA
-            while(is.na(PLDs_star[1])) {
-                rhos_star <- rhos + rnorm(1, 0, sqrt(tune_vars))
-                while(rhos_star < 1 | rhos_star > max_range) {
-                    rhos_star <- rhos + rnorm(1, 0, sqrt(tune_vars))
-                }
-                PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus)
-            }
+            lb <- pnorm(-(rhos-min_range), mean = 0, sd = sqrt(tune_vars))
+            ub <- pnorm(max_range-rhos, mean = 0, sd = sqrt(tune_vars))
+            uuu <- runif(1, lb, ub)
+            rhos_star <- rhos + qnorm(uuu, mean = 0, sd = sqrt(tune_vars))
+            PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus)
+            # PLDs_star <- NA
+            # while(is.na(PLDs_star[1])) {
+            #     rhos_star <- rhos + rnorm(1, 0, sqrt(tune_vars))
+            #     while(rhos_star < 1 | rhos_star > max_range) {
+            #         rhos_star <- rhos + rnorm(1, 0, sqrt(tune_vars))
+            #     }
+            #     PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus)
+            # }
 
             # And the sum of squares star
             SS_star <- tau * sum(apply(yminusXb, 2, function(X)
@@ -190,14 +195,16 @@ run_sgp_correlated_errs <- function(y,
             SS <- sum(apply(yminusXb, 2, function(X)
                 emulator::quad.form(PLDe$precision, X)))
             lr <- log(r / (1 - r))
+            lr_star  <- rnorm(1, lr, 0.5)
+            r_star  <- exp(lr_star) / (1 + exp(lr_star))
+            PLDe_star <- get_prec_and_det(d, r_star, rhoe, nue)
 
-            PLDe_star <- NA
-            while(is.na(PLDe_star[1])) {
-                lr_star  <- rnorm(1, lr, 0.5)
-                r_star  <- exp(lr_star) / (1 + exp(lr_star))
-                PLDe_star <- get_prec_and_det(d, r_star, rhoe, nue)
-            }
-
+            # PLDe_star <- NA
+            # while(is.na(PLDe_star[1])) {
+            #     lr_star  <- rnorm(1, lr, 0.5)
+            #     r_star  <- exp(lr_star) / (1 + exp(lr_star))
+            #     PLDe_star <- get_prec_and_det(d, r_star, rhoe, nue)
+            # }
             SS_star <- sum(apply(yminusXb, 2, function(X)
                 emulator::quad.form(PLDe_star$precision, X)))
 
@@ -220,19 +227,20 @@ run_sgp_correlated_errs <- function(y,
             #   nu and rho for the spatial signal Matern covariance
 
             # Sometimes the proposal is bad -- this prevents the program from dying
-            PLDe_star <- NA
-            
-            # trunc_runife <- runif(1, pnorm(-(rhoe-min_range), mean = 0, sd = sqrt(tune_vare)), pnorm(max_range-rhoe, mean = 0, sd = sqrt(tune_vare)))
-            # qnorm(trunc_runife, mean = 0, sd = sqrt(tune_vare))
-            
-            while(is.na(PLDe_star[1])) {
-                rhoe_star <- rhoe + rnorm(1, 0, sqrt(tune_vare))
-                while(rhoe_star < 1 | rhoe_star > max_range) {
-                    rhoe_star <- rhoe + rnorm(1, 0, sqrt(tune_vare))
-                }
-
-                PLDe_star <- get_prec_and_det(d, r, rhoe_star, nue)
-            }
+            lb <- pnorm(-(rhoe-min_range), mean = 0, sd = sqrt(tune_vare))
+            ub <- pnorm(max_range-rhoe, mean = 0, sd = sqrt(tune_vare))
+            uuu <- runif(1, lb, ub)
+            rhoe_star <- rhoe + qnorm(uuu, mean = 0, sd = sqrt(tune_vare))
+            PLDe_star <- get_prec_and_det(d, r, rhoe_star, nue)
+            # PLDe_star <- NA
+            # while(is.na(PLDe_star[1])) {
+            #     rhoe_star <- rhoe + rnorm(1, 0, sqrt(tune_vare))
+            #     while(rhoe_star < 1 | rhoe_star > max_range) {
+            #         rhoe_star <- rhoe + rnorm(1, 0, sqrt(tune_vare))
+            #     }
+            #
+            #     PLDe_star <- get_prec_and_det(d, r, rhoe_star, nue)
+            # }
 
             SS_star <- sum(apply(yminusXb, 2, function(X)
                 emulator::quad.form(PLDe_star$precision, X)))

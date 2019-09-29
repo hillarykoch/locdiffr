@@ -37,8 +37,8 @@ crun_sgp_nugget <- function(reps, n, p, tau, X, PLDs_precision, PLDs_ldet, errpr
     .Call(`_sgp_crun_sgp_nugget`, reps, n, p, tau, X, PLDs_precision, PLDs_ldet, errprec, precision_beta, y, iters, aas, bs, rhos, nus, tune_var, min_range, max_range, win_len, d, acpt_rhos, c0, c1, tune_k, acpt_chain, tune_var_chain)
 }
 
-crun_sgp_correlated <- function(reps, n, p, tau, X, PLDs_precision, PLDs_ldet, PLDe_precision, PLDe_ldet, errprec, precision_beta, y, iters, aas, bs, rhos, nus, rhoe, nue, r, sd_r, tune_vars, tune_vare, min_range, max_range, win_len, d, acpt_rhos, acpt_rhoe, c0, c1, tune_k, acpt_chain, tune_var_chain) {
-    .Call(`_sgp_crun_sgp_correlated`, reps, n, p, tau, X, PLDs_precision, PLDs_ldet, PLDe_precision, PLDe_ldet, errprec, precision_beta, y, iters, aas, bs, rhos, nus, rhoe, nue, r, sd_r, tune_vars, tune_vare, min_range, max_range, win_len, d, acpt_rhos, acpt_rhoe, c0, c1, tune_k, acpt_chain, tune_var_chain)
+crun_sgp_correlated <- function(reps, n, p, tau, X, PLDs_precision, PLDs_ldet, PLDe_precision, PLDe_ldet, precision_beta, y, iters, aas, bs, rhos, nus, rhoe, nue, r, sd_r, tune_vars, tune_vare, min_range, max_range, win_len, d, acpt_rhos, acpt_rhoe, c0, c1, tune_k, acpt_chain, tune_var_chain) {
+    .Call(`_sgp_crun_sgp_correlated`, reps, n, p, tau, X, PLDs_precision, PLDs_ldet, PLDe_precision, PLDe_ldet, precision_beta, y, iters, aas, bs, rhos, nus, rhoe, nue, r, sd_r, tune_vars, tune_vare, min_range, max_range, win_len, d, acpt_rhos, acpt_rhoe, c0, c1, tune_k, acpt_chain, tune_var_chain)
 }
 
 fastMeanFilter <- function(mat, h) {

@@ -20,7 +20,7 @@ run_sgp <- function(y,
                     sd_beta = 10,
                     init_beta = NULL,
                     iters = 500,
-                    burnin = 100) {
+                    burnin = 0) {
     if (corr_errs) {
         if (ncol(y) < 2) {
             stop(

@@ -20,7 +20,7 @@ run_sgp_nugget <- function(y,
                            # initial value of regression coefs
                            cpp = TRUE,
                            iters = 500,
-                           burnin = 1) {
+                           burnin = 0) {
     # number of observation locations, number of process replicates (sample size)
     n <- nrow(y)
     reps <- ncol(y)
@@ -169,21 +169,28 @@ run_sgp_nugget <- function(y,
             #-----------------------------------------------------------------------
 
             # First do rho_s
-            PLDs_star <- NA
-            while(is.na(PLDs_star[1])) {
-                # This takes the log of rhos, does a normal random walk proposal,
-                #   and then exponentiates back
-                # rhos_star <- exp(log(rhos) + rnorm(1, 0, sqrt(tune_var)))
+            # PLDs_star <- NA
+            # while(is.na(PLDs_star[1])) {
+            #     # This takes the log of rhos, does a normal random walk proposal,
+            #     #   and then exponentiates back
+            #     # rhos_star <- exp(log(rhos) + rnorm(1, 0, sqrt(tune_var)))
+            #
+            #     # Try instead to propose on the current scale,
+            #     #   and just reject if rhos is negative (hopefully more stable)
+            #     rhos_star <- rhos + rnorm(1, 0, sqrt(tune_var))
+            #     while(rhos_star <= min_range | rhos_star > max_range) {
+            #         rhos_star <- rhos + rnorm(1, 0, sqrt(tune_var))
+            #     }
+            #
+            #     PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus)
+            # }
+            lb <- pnorm(-(rhos-min_range), mean = 0, sd = sqrt(tune_var))
+            ub <- pnorm(max_range-rhos, mean = 0, sd = sqrt(tune_var))
+            uuu <- runif(1, lb, ub)
+            rhos_star <- rhos + qnorm(uuu, mean = 0, sd = sqrt(tune_var))
+            PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus)
 
-                # Try instead to propose on the current scale,
-                #   and just reject if rhos is negative (hopefully more stable)
-                rhos_star <- rhos + rnorm(1, 0, sqrt(tune_var))
-                while(rhos_star <= min_range | rhos_star > max_range) {
-                    rhos_star <- rhos + rnorm(1, 0, sqrt(tune_var))
-                }
 
-                PLDs_star <- get_prec_and_det(d, 1, rhos_star, nus)
-            }
             SS_star <- tau * sum(apply(yminusXb, 2, function(X)
                 emulator::quad.form(PLDs_star$precision, X)))
 

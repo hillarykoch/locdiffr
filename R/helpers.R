@@ -55,6 +55,7 @@ extend_mcmc <- function(fit,
                         X,
                         corr_errs = FALSE,
                         cpp = TRUE,
+                        init_nu = 0.5,
                         mean_nu = 0,
                         sd_nu = 1,
                         min_range = 1,
@@ -65,19 +66,20 @@ extend_mcmc <- function(fit,
                         tauinv = NULL,
                         errvar = NULL,
                         sd_beta = 10,
-                        iters = 500) {
+                        iters = 500,
+                        ...) {
     iters_so_far <- nrow(fit$covar_params)
 
     if (corr_errs) {
-        init_nu_e <- fit$covar_params[iters_so_far, "nu_e"]
         init_range_e <- fit$covar_params[iters_so_far, "range_e"]
         init_r <- fit$covar_params[iters_so_far, "r"]
         errvar <- NULL
     } else {
         errvar <- fit$covar_params[iters_so_far, "err_sd"] ^ 2
         init_nu_e <- init_range_e <- init_r <- NULL
+        init_nu_s <- 0.5
     }
-    init_nu <- fit$covar_params[iters_so_far, "nu_s"]
+
     init_range <- fit$covar_params[iters_so_far, "range_s"]
     tauinv <- fit$covar_params[iters_so_far, "sigma"] ^ 2
     init_beta <- fit$beta[nrow(fit$beta),]
@@ -88,12 +90,12 @@ extend_mcmc <- function(fit,
         X,
         corr_errs = corr_errs,
         cpp = cpp,
-        cutoff = cutoff,
         mean_nu = mean_nu,
         sd_nu = sd_nu,
-        init_nus = init_nu_s,
-        init_nue = init_nu_e,
-        min_range = minn_range,
+        init_nus = init_nu,
+        init_nue = NULL,
+        min_range = min_range,
+        max_max_range = NULL,
         init_range = init_range,
         init_range_e = init_range_e,
         init_r = init_r,
