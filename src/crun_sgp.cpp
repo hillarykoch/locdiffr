@@ -1,15 +1,9 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 
 // [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::depends(BH)]]
 // [[Rcpp::plugins(cpp11)]]
 #include <RcppArmadillo.h>
-#include <random>
-#include <boost/math/special_functions/bessel.hpp>
-#include <boost/math/distributions/normal.hpp>
-#include <boost/math/distributions/gamma.hpp>
 
-using namespace boost::math;
 using namespace Rcpp;
 using namespace RcppArmadillo;
 
