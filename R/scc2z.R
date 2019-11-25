@@ -1,16 +1,17 @@
 # Get z-scores from SCCs
+stripones <- function(sc) {
+    # loc1 <- min(which(cumsum(sc - 1) != 0))
+    r_sc <- rev(sc)
+    loc2 <- length(r_sc) - min(which(cumsum(r_sc) != 0)) + 1
+
+    # return(c(loc1, loc2))
+    return(c(1,loc2))
+}
+
 get_z <- function(ys) {
     locs <- stripones(ys)
     data.frame(crd = locs[1]:locs[2], scc = ys[locs[1]:locs[2]]) %>%
         dplyr::mutate(z_s = fishT(scc))
-}
-
-stripones <- function(sc) {
-    loc1 <- min(which(cumsum(sc - 1) != 0))
-    r_sc <- rev(sc)
-    loc2 <- length(r_sc) - min(which(cumsum(r_sc) != 0)) + 1
-
-    return(c(loc1, loc2))
 }
 
 fishT <- function(y) {

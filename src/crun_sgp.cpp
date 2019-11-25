@@ -81,9 +81,9 @@ double mod(double a, double n) {
     return(a - trunc(a/n)*n);
 }
 
-double cupdate_var(double cur_var, double acpt_rt, double gamma1, double opt_rt = .3) {
-    return(exp(log(cur_var) + gamma1 * (acpt_rt - opt_rt)));
-}
+//double cupdate_var(double cur_var, double acpt_rt, double gamma1, double opt_rt = .3) {
+//    return(exp(log(cur_var) + gamma1 * (acpt_rt - opt_rt)));
+//}
 
 // Treats as mean 0 here, and is added on to Xp %*% beta in the actual body of the code
 arma::colvec cmake_pred(arma::mat y, arma::mat matern_cov, double tau) {
@@ -229,13 +229,13 @@ Rcpp::List crun_sgp_nugget(
         //-----------------------------------------------------------------------
         // Update the tuning variance
         //-----------------------------------------------------------------------
-        if(i >= 100) {
-            gamma1 = c0 / pow(i + tune_k, c1);
-            acpt_rt_rhos = mean(acpt_rhos);
-            tune_var = cupdate_var(tune_var, acpt_rt_rhos, gamma1, .3);
-            acpt_chain(i-100) = acpt_rt_rhos;
-            tune_var_chain(i-100) = tune_var;
-        }
+//        if(i >= 100) {
+//            gamma1 = c0 / pow(i + tune_k, c1);
+//            acpt_rt_rhos = mean(acpt_rhos);
+//            tune_var = cupdate_var(tune_var, acpt_rt_rhos, gamma1, .3);
+//            acpt_chain(i-100) = acpt_rt_rhos;
+//            tune_var_chain(i-100) = tune_var;
+//        }
 
         //-------------------------------------------------------------
         // Update error variance term
@@ -269,9 +269,9 @@ Rcpp::List crun_sgp_nugget(
 
     return (Rcpp::List::create(Rcpp::Named("beta") = beta_chain,
                               Rcpp::Named("covar_params") = param_chain,
-                              Rcpp::Named("pred") = ypred,
-                              Rcpp::Named("acpt_chain") = acpt_chain,
-                              Rcpp::Named("tune_chain") = tune_var_chain));
+                              Rcpp::Named("pred") = ypred));//,
+//                              Rcpp::Named("acpt_chain") = acpt_chain,
+//                              Rcpp::Named("tune_chain") = tune_var_chain));
 
 }
 
@@ -341,6 +341,7 @@ Rcpp::List crun_sgp_correlated(
     std::default_random_engine generator;
     std::uniform_real_distribution<double> runif(0.0,1.0);
     normal lr_proposal(0.0, 0.5);
+    normal lr_prior(0.0, sd_r);
     normal standard_normal;
 
     arma::colvec random_normals(p, arma::fill::none);
@@ -393,7 +394,6 @@ Rcpp::List crun_sgp_correlated(
 
         rhos_star = rhos + quantile(rhos_proposal, trunc_runifs(generator));
         maternmat = cMatern(d, rhos_star, nus);
-
         PLDs_precision_star = cinv(maternmat);
         PLDs_ldet_star = get_ldet(maternmat);
 
@@ -424,11 +424,13 @@ Rcpp::List crun_sgp_correlated(
             temp2 = (yminusXb.col(rr).t()) * PLDe_precision * yminusXb.col(rr);
             temp1(rr) = temp2(0);
         }
-        SS = tau * arma::accu(temp1);
+        //SS = tau * arma::accu(temp1);
+        SS = arma::accu(temp1);
         lr = log(r / (1-r));
         lr_star = lr + quantile(lr_proposal, runif(generator));
         r_star = exp(lr_star) / (1 + exp(lr_star));
 
+        maternmat = cMatern(d, rhoe, nue);
         Q = getQ(maternmat, d, r_star);
         PLDe_precision_star = cinv(Q);
         PLDe_ldet_star = get_ldet(Q);
@@ -441,8 +443,13 @@ Rcpp::List crun_sgp_correlated(
         temp1.set_size(reps);
 
         R = 0.5 * (PLDe_ldet_star - PLDe_ldet) - 0.5 * (SS_star - SS) +
-            log(pdf(lr_proposal, lr_star)) - log(pdf(lr_proposal, lr));
+            log(pdf(lr_prior, lr_star)) - log(pdf(lr_prior, lr));
+        std::cout << "ldet star = " << PLDe_ldet_star << std::endl;
+        std::cout << "ldet = " << PLDe_ldet << std::endl;
+        std::cout << "SS_star = " << SS_star << std::endl;
+        std::cout << "SS = " << SS << std::endl;
         if(runif(generator) < exp(R)) {
+            std::cout << "updating" << std::endl;
             r = r_star;
             PLDe_precision = PLDe_precision_star;
             PLDe_ldet = PLDe_ldet_star;
@@ -452,9 +459,9 @@ Rcpp::List crun_sgp_correlated(
         normal rhoe_proposal(0.0, sqrt(tune_vare));
         std::uniform_real_distribution<double> trunc_runife(cdf(rhoe_proposal, -(rhoe-min_range)), cdf(rhoe_proposal, max_range - rhoe));
         rhoe_star = rhoe + quantile(rhoe_proposal, trunc_runife(generator));
+       
         maternmat = cMatern(d, rhoe_star, nue);
         Q = getQ(maternmat, d, r);
-
         PLDe_precision_star = cinv(maternmat);
         PLDe_ldet_star = get_ldet(maternmat);
 
@@ -478,17 +485,17 @@ Rcpp::List crun_sgp_correlated(
         //-----------------------------------------------------------------------
         // Update the tuning variance
         //-----------------------------------------------------------------------
-        if(i >= 100) {
-            gamma1 = c0 / pow(i + tune_k, c1);
-            acpt_rt_rhos = mean(acpt_rhos);
-            acpt_rt_rhoe = mean(acpt_rhoe);
-            tune_vars = cupdate_var(tune_vars, acpt_rt_rhos, gamma1, .3);
-            tune_vare = cupdate_var(tune_vare, acpt_rt_rhoe, gamma1, .3);
-            acpt_chain.row(i-100).col(0) = acpt_rt_rhos;
-            acpt_chain.row(i-100).col(1) = acpt_rt_rhoe;
-            tune_var_chain.row(i-100).col(0) = tune_vars;
-            tune_var_chain.row(i-100).col(1) = tune_vare;
-        }
+//        if(i >= 100) {
+//            gamma1 = c0 / pow(i + tune_k, c1);
+//            acpt_rt_rhos = mean(acpt_rhos);
+//            acpt_rt_rhoe = mean(acpt_rhoe);
+//            tune_vars = cupdate_var(tune_vars, acpt_rt_rhos, gamma1, .3);
+//            tune_vare = cupdate_var(tune_vare, acpt_rt_rhoe, gamma1, .3);
+//            acpt_chain.row(i-100).col(0) = acpt_rt_rhos;
+//            acpt_chain.row(i-100).col(1) = acpt_rt_rhoe;
+//            tune_var_chain.row(i-100).col(0) = tune_vars;
+//            tune_var_chain.row(i-100).col(1) = tune_vare;
+//        }
 
         //-------------------------------------------------------------
         // Update chain parameter log
@@ -508,7 +515,7 @@ Rcpp::List crun_sgp_correlated(
     }
     return (Rcpp::List::create(Rcpp::Named("beta") = beta_chain,
                                Rcpp::Named("covar_params") = param_chain,
-                               Rcpp::Named("pred") = ypred,
-                               Rcpp::Named("acpt_chain") = acpt_chain,
-                               Rcpp::Named("tune_chain") = tune_var_chain));
+                               Rcpp::Named("pred") = ypred));//,
+//                               Rcpp::Named("acpt_chain") = acpt_chain,
+//                               Rcpp::Named("tune_chain") = tune_var_chain));
 }

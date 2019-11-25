@@ -1,30 +1,15 @@
-get_prec_and_det <- function(d,
-                             r,
-                             range = NULL,
-                             nu = NULL,
-                             thresh = 1e-07) {
-    # Compute the matern covariance function (r = 1 when signal effects)
-    # cifelse returns a matrix with 1 where d = 0, and is 0 otherwise
-    Q <-
-        r * fields::Matern(d, range = range, smoothness = nu) + (1 - r) * cifelse(d)
-
-    if (any(is.nan(Q))) {
-        warning("nans in Q when calling get_prec_and_det.")
-        return(NA)
-    } else {
-        # Get the eigenvalues/vectors
-        eigvals <- cgeteigs(Q)
-
-        # Adjustment for numerical stability (dont want, effectively, 1/0)
-        D <- cifelse_eigvals(eigvals, thresh)
-
-        # Inverse correlation and its log determinant
-        return(list(
-            "precision" = cinv(Q),
-            "ldeterminant" = sum(log(D))
-        ))
-    }
+get_cor <- function(d, range = NULL) {
+    # Compute the Exponential covariance function
+    fields::Exponential(d, range = range)
 }
+
+# get_log_det <- function(covmat, thresh = 1e-07) {
+#     eigvals <- cgeteigs(covmat)
+#     
+#     # Adjustment for numerical stability (dont want, effectively, 1/0)
+#     D <- cifelse_eigvals(eigvals, thresh)
+#     return(sum(log(D)))
+# }
 
 # Treats as mean 0 here, and is added on to Xp %*% beta in the actual body of the code
 make_pred <- function(y, matern_cov, tau) {
@@ -40,7 +25,12 @@ update_var <- function(cur_var, acpt_rt, opt_rt = .3, gamma1) {
 
 # Compute upper bound on the prior for the spatial range parameter
 get_max_range <- function(dat, max_max_range) {
-    autocor <- as.vector(acf(rowMeans(dat), plot = FALSE, lag.max = max_max_range)$acf)
+    if(is.null(dim(dat))) {
+        autocor <- as.vector(acf(dat, plot = FALSE, lag.max = max_max_range)$acf)
+    } else {
+        autocor <- as.vector(acf(rowMeans(dat), plot = FALSE, lag.max = max_max_range)$acf)
+    }
+
     idx <- sapply(1:(max_max_range-1), function(X) autocor[X] < autocor[X+1]) & autocor[1:(max_max_range-1)] < .05
     if(any(idx)) {
         which(idx)[1]
@@ -53,33 +43,20 @@ extend_mcmc <- function(fit,
                         y,
                         s,
                         X,
-                        corr_errs = FALSE,
-                        cpp = TRUE,
-                        init_nu = 0.5,
-                        mean_nu = 0,
-                        sd_nu = 1,
                         min_range = 1,
                         max_max_range = 100,
-                        sd_r = 3,
+                        range_sd = sqrt(2),
                         as = 2,
                         bs = 2,
                         tauinv = NULL,
                         errvar = NULL,
                         sd_beta = 10,
+                        nugget_sd = 1,
                         iters = 500,
                         ...) {
     iters_so_far <- nrow(fit$covar_params)
 
-    if (corr_errs) {
-        init_range_e <- fit$covar_params[iters_so_far, "range_e"]
-        init_r <- fit$covar_params[iters_so_far, "r"]
-        errvar <- NULL
-    } else {
-        errvar <- fit$covar_params[iters_so_far, "err_sd"] ^ 2
-        init_nu_e <- init_range_e <- init_r <- NULL
-        init_nu_s <- 0.5
-    }
-
+    errvar <- fit$covar_params[iters_so_far, "epsilon"] ^ 2
     init_range <- fit$covar_params[iters_so_far, "range_s"]
     tauinv <- fit$covar_params[iters_so_far, "sigma"] ^ 2
     init_beta <- fit$beta[nrow(fit$beta),]
@@ -88,24 +65,17 @@ extend_mcmc <- function(fit,
         y,
         s,
         X,
-        corr_errs = corr_errs,
-        cpp = cpp,
-        mean_nu = mean_nu,
-        sd_nu = sd_nu,
-        init_nus = init_nu,
-        init_nue = NULL,
         min_range = min_range,
-        max_max_range = NULL,
+        max_max_range = max_max_range,
         init_range = init_range,
-        init_range_e = init_range_e,
-        init_r = init_r,
-        sd_r = sd_r,
+        range_sd = range_sd,
         as = as,
         bs = bs,
         tauinv = tauinv,
         errvar = errvar,
         sd_beta = sd_beta,
         init_beta = init_beta,
+        nugget_sd = nugget_sd,
         iters = iters,
         burnin = 0
     )
