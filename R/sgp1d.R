@@ -135,10 +135,10 @@ run_sgp <- function(y,
         cov_star <- tauinv * cor_cur_star
         invcov_star <- cinv(cov_star)
         
-        # ldet_cur <- get_log_det(cov_cur)
-        # ldet_star <- get_log_det(cov_star)
-        ldet_cur <- log(det(cov_cur))
-        ldet_star <- log(det(cov_star))
+        ldet_cur <- abs(get_log_det(cov_cur))
+        ldet_star <- abs(get_log_det(cov_star))
+        # ldet_cur <- log(det(cov_cur))
+        # ldet_star <- log(det(cov_star))
         
         SS <- tau * SS
         SS_star <- sum(apply(yminusXb, 2, function(X) emulator::quad.form(invcov_star, X)))

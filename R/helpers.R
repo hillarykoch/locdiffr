@@ -3,13 +3,13 @@ get_cor <- function(d, range = NULL) {
     fields::Exponential(d, range = range)
 }
 
-# get_log_det <- function(covmat, thresh = 1e-07) {
-#     eigvals <- cgeteigs(covmat)
-#     
-#     # Adjustment for numerical stability (dont want, effectively, 1/0)
-#     D <- cifelse_eigvals(eigvals, thresh)
-#     return(sum(log(D)))
-# }
+get_log_det <- function(covmat, thresh = 1e-07) {
+    eigvals <- cgeteigs(covmat)
+
+    # Adjustment for numerical stability (dont want, effectively, 1/0)
+    D <- cifelse_eigvals(eigvals, thresh)
+    return(sum(log(D)))
+}
 
 # Treats as mean 0 here, and is added on to Xp %*% beta in the actual body of the code
 make_pred <- function(y, matern_cov, tau) {
