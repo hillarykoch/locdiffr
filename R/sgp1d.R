@@ -28,7 +28,7 @@ run_sgp <- function(y,
 
     # number of predictors
     p <- ncol(X)
-
+    
     d <- cpwdist(s, s)
     npred <- nrow(s)
 
@@ -90,8 +90,7 @@ run_sgp <- function(y,
     # store regression coefficients and covariance params
     beta_chain <- matrix(0, iters, p)
     param_chain <- matrix(0, iters, 3)
-    colnames(param_chain) <-
-        c("sigma", "range_s", "epsilon")
+    colnames(param_chain) <- c("sigma", "range_s", "epsilon")
 
     pb <- txtProgressBar(min = 1,
                          max = iters,
@@ -131,8 +130,8 @@ run_sgp <- function(y,
         cov_cur <- tauinv * cor_cur
         invcov_cur <- cinv(cov_cur)
         
-        cor_cur_star <- get_cor(d, rhos_star) + diag(errvar, n)
-        cov_star <- tauinv * cor_cur_star
+        cor_star <- get_cor(d, rhos_star) + diag(errvar, n)
+        cov_star <- tauinv * cor_star
         invcov_star <- cinv(cov_star)
         
         ldet_cur <- abs(get_log_det(cov_cur))
@@ -146,7 +145,7 @@ run_sgp <- function(y,
 
         if (runif(1) < exp(R)) {
             rhos <- rhos_star
-            cor_cur <- cor_cur_star
+            cor_cur <- cor_star
             cov_cur <- cov_star
             invcov_cur <- invcov_star
         }
@@ -160,19 +159,19 @@ run_sgp <- function(y,
         errprec_star <- errprec + qnorm(uuu, mean = 0, sd = sqrt(tune_var_epsilon))
         errvar_star <- 1/errprec_star
 
-        cor_cur_star <- get_cor(d, rhos) + diag(errvar_star, n)
-        cov_star <- tauinv * cor_cur_star
+        cor_star <- get_cor(d, rhos) + diag(errvar_star, n)
+        cov_star <- tauinv * cor_star
         invcov_star <- cinv(cov_star)
         
-        R <- sum(dmvnorm(x = t(Y), mean = Xb, sigma = cov_star, log = TRUE)) -
-            sum(dmvnorm(x = t(Y), mean = Xb, sigma = cov_cur, log = TRUE)) +
+        R <- sum(dmvnorm(x = t(y), mean = Xb, sigma = cov_star, log = TRUE)) -
+            sum(dmvnorm(x = t(y), mean = Xb, sigma = cov_cur, log = TRUE)) +
             dgamma(errprec_star, as, bs) -
             dgamma(errprec, as, bs)
         
         if (runif(1) < exp(R)) {
             errvar <- errvar_star
             errprec <- errprec_star
-            cor_cur <- cor_cur_star
+            cor_cur <- cor_star
             # acpt_epsilon[(i+1) %% win_len] <- 1
         }
         
