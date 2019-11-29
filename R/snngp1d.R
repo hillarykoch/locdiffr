@@ -50,7 +50,7 @@ run_nnsgp <- function(y,
         tauinv <- var(lmfit$res)
     }
     if (is.null(errvar)) {
-        errvar <- var(lmfit$res)
+        errvar <- 1
     }
     
     # init value of the log matern spatial range parameter
