@@ -88,10 +88,6 @@ run_nnsgp <- function(y,
     cor_cur <- get_cor_sparse(d, rhos, neighbor_column_major_idx) + diag(errvar, n)
     cov_cur <- cor_cur * tauinv
     
-    # chain of predicted values for y
-    # If no prediction locations, just iters of zeroes that won't update
-    ypred <- matrix(0, iters, npred)
-    
     # store regression coefficients and covariance params
     beta_chain <- matrix(0, iters, p)
     param_chain <- matrix(0, iters, 3)
@@ -108,7 +104,7 @@ run_nnsgp <- function(y,
         #-------------------------------------------------------------
         # Update regression coefficients
         #-------------------------------------------------------------
-        B_and_b <- csolve_for_B_and_b(y, X, A_and_D$A, diag(A_and_D$D), neighbor_list, precision_beta)
+        B_and_b <- csolve_for_B_and_b(y, X, A_and_D$A, A_and_D$D@x, neighbor_list, precision_beta)
         beta <- RandomFieldsUtils::solvex(B_and_b$B, B_and_b$b) +
             backsolve(t(chol(B_and_b$B)), rnorm(p), upper.tri = FALSE)
         Xb <- as.vector(X %*% beta)
@@ -123,7 +119,7 @@ run_nnsgp <- function(y,
                 csparse_quadratic_form_symm(
                     u = U,
                     A = A_and_D$A,
-                    D = diag(A_and_D$D),
+                    D = A_and_D$D@x,
                     neighbor_list = neighbor_list
                     )) %>%
             sum
@@ -154,11 +150,11 @@ run_nnsgp <- function(y,
         SS_star <- apply(yminusXb, 2, function(U)
             csparse_quadratic_form_symm(U,
                                        A = A_and_D_star$A,
-                                       D = diag(A_and_D_star$D),
+                                       D = A_and_D_star$D@x,
                                        neighbor_list = neighbor_list)) %>%
             sum
-        ldet_cur <- abs(sum(log(diag(A_and_D$D))))
-        ldet_star <- abs(sum(log(diag(A_and_D_star$D))))
+        ldet_cur <- abs(sum(log(A_and_D$D@x)))
+        ldet_star <- abs(sum(log(A_and_D_star$D@x)))
 
         R <- (reps/2) * (ldet_cur - ldet_star) + 0.5 * (SS - SS_star)
         if (runif(1) < exp(R)) {
@@ -187,10 +183,10 @@ run_nnsgp <- function(y,
         SS_star <- apply(yminusXb, 2, function(U)
             csparse_quadratic_form_symm(U,
                                        A = A_and_D_star$A,
-                                       D = diag(A_and_D_star$D),
+                                       D = A_and_D_star$D@x,
                                        neighbor_list = neighbor_list)) %>%
             sum
-        ldet_star <- abs(sum(log(diag(A_and_D_star$D))))
+        ldet_star <- abs(sum(log(A_and_D_star$D@x)))
 
         R <- dgamma(errprec_star, as, bs) - dgamma(errprec, as, bs) +
             0.5 * (SS - SS_star) +
@@ -208,24 +204,18 @@ run_nnsgp <- function(y,
         param_chain[i,] <-
             c(1 / sqrt(tau), rhos, sqrt(errvar))
 
-        # #-----------------------------------------------------------------------
-        # # Draw a process from the current model
-        # #   might want to break this out, and do it on the MCMC after the fact
-        # #   That way, won't need to make predictions for every iteration and
-        # #   store all this info as the MCMC runs
-        # #-----------------------------------------------------------------------
-        # exp_cov <- fields::Exponential(d, range = rhos)
-        # ypred[i,] <-
-        #     X %*% beta + make_pred(y - Xb, exp_cov, tau)
-
         setTxtProgressBar(pb, i)
     }
     close(pb)
-
+    
     list("beta" = beta_chain,
          "covar_params" = param_chain,
-         "pred" = ypred,
-         "num_neighbors" = num_neighbors)
+         "neighbor_info" = list(
+             "num_neighbors" = num_neighbors,
+             "neighbor_list" = neighbor_list,
+             "neighbor_column_major_index" = neighbor_column_major_idx,
+             "d" = d)
+         )
 }
 
 
@@ -256,7 +246,7 @@ extend_nn_mcmc <- function(fit,
         y,
         s,
         X,
-        num_neighbors = fit$num_neighbors,
+        num_neighbors = fit$neighbor_info$num_neighbors,
         min_range = min_range,
         max_max_range = max_max_range,
         init_range = init_range,

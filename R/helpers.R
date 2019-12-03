@@ -12,9 +12,9 @@ get_log_det <- function(covmat, thresh = 1e-07) {
 }
 
 # Treats as mean 0 here, and is added on to Xp %*% beta in the actual body of the code
-make_pred <- function(y, matern_cov, tau) {
-    np   <- nrow(matern_cov)
-    cond_cov <- matern_cov / tau
+make_pred <- function(y, exp_cov, tau) {
+    np   <- nrow(exp_cov)
+    cond_cov <- exp_cov / tau
     rowMeans(y) + t(RandomFieldsUtils::cholx(cond_cov)) %*% rnorm(np)
 }
 

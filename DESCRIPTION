@@ -15,6 +15,7 @@ Imports:
     LaplacesDemon,
     magrittr,
     Matrix,
+    purrr,
     RandomFieldsUtils,
     Rcpp (>= 0.12.16),
     stats

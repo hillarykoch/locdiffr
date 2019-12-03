@@ -196,9 +196,9 @@ run_sgp <- function(y,
         #   That way, won't need to make predictions for every iteration and
         #   store all this info as the MCMC runs
         #-----------------------------------------------------------------------
-        matern_cov <- fields::Exponential(d, range = rhos)
+        exp_cov <- fields::Exponential(d, range = rhos)
         ypred[i,] <-
-            X %*% beta + make_pred(y - Xb, matern_cov, tau)
+            X %*% beta + make_pred(y - Xb, exp_cov, tau)
 
         setTxtProgressBar(pb, i)
     }
