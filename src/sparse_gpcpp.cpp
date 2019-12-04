@@ -1,10 +1,14 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 
 #include <RcppArmadillo.h>
+#include <random>
+#include <boost/math/distributions/normal.hpp>
 
 using namespace Rcpp;
 using namespace RcppArmadillo;
+using namespace boost::math;
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::depends(BH)]]
 // [[Rcpp::plugins(cpp11)]]
 
 
@@ -90,4 +94,36 @@ Rcpp::List csolve_for_B_and_b(arma::mat& y,
             Rcpp::Named("B") = B + precision_beta,
             Rcpp::Named("b") = b)
                );
+}
+
+// [[Rcpp::export]]
+arma::colvec cmake_one_pred_sparse(Rcpp::List& neighbor_list,
+                                arma::mat& y,
+                                arma::mat& s,
+                                arma::mat& X,
+                                arma::mat& cond_cov) {
+    int n = y.n_rows;
+    arma::colvec preds(n, arma::fill::none);
+    arma::colvec z(n, arma::fill::none);
+    arma::mat L;
+    
+    std::default_random_engine generator;
+    std::uniform_real_distribution<double> runif(0.0,1.0);
+    normal standard_normal;
+    
+    for(auto i = 0; i < n; i++) {
+        z(i) = quantile(standard_normal, runif(generator));
+    }
+    
+    arma::uvec Nidx;
+    int sizen;
+    preds[0] = sqrt(cond_cov[0]) * z[0];
+    for(auto i = 1; i < n; i++) {
+        Nidx = as<arma::uvec>(neighbor_list[i]) - 1;
+        sizen = Nidx.size()-1;
+        L = arma::chol(cond_cov.cols(Nidx[0], Nidx[sizen]).rows(Nidx[0], Nidx[sizen]), "upper");
+        preds[i] = arma::dot(L.col(L.n_cols-1), z.subvec(Nidx[0], Nidx[sizen]));
+    }
+    
+    return(preds);   
 }

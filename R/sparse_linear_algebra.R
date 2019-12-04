@@ -26,20 +26,7 @@ get_cor_sparse <- function(d, range = NULL, col_index) {
     d
 }
 
-# Treats as mean 0 here, and is added on to Xp %*% beta in the actual body of the code
-make_one_pred_sparse <- function(fit, y, s, X, cond_cov) {
-    preds <- rep(NA, length = nrow(y))
-    z <- rnorm(nrow(y))
-    preds[1] <- sqrt(cond_cov[1]) * z[1]
-    for(i in 2:length(preds)) {
-        Nidx <- c(fit$neighbor_info$neighbor_list[[i]],i)
-        L <- t(chol(cond_cov[Nidx, Nidx]))
-        preds[i] <- (tail(L,1) %*% z[Nidx])[1]
-    }
-    preds
-}
-
-make_pred_sparse <- function(fit, y, s, X, stationary_iterations){#, y, exp_cov, tau, epsilon) {
+make_pred_sparse <- function(fit, y, s, X, stationary_iterations){
     stationary_beta <- fit$beta[stationary_iterations,]
     stationary_covar <- fit$covar_params[stationary_iterations,]
     Xb <- X %*% t(stationary_beta)
@@ -56,10 +43,19 @@ make_pred_sparse <- function(fit, y, s, X, stationary_iterations){#, y, exp_cov,
                 range = .y,
                 col_index = col_index
             ) * .x
-        )
+        ) %>%
+        purrr::map(as.matrix)
+    
     preds <- matrix(NA, nrow = nrow(y), ncol = length(stationary_iterations))
+    neighbor_list_mod <- purrr::map2(.x = fit$neighbor_info$neighbor_list,
+                                     .y = seq_along(fit$neighbor_info$neighbor_list),
+                                     ~ c(.x, .y))
     for(j in 1:ncol(preds)) {
-        preds[,j] <- make_one_pred_sparse(fit, y, s, X, cond_covs[[j]])    
+        preds[,j] <- cmake_one_pred_sparse(neighbor_list_mod,
+                                           y,
+                                           s,
+                                           X,
+                                           cond_covs[[j]])
     }
     preds <- preds + Xb
     preds <- sweep(preds, 1, rowMeans(y), `+`)
