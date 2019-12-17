@@ -143,6 +143,78 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cmake_one_pred_sparse
+arma::colvec cmake_one_pred_sparse(Rcpp::List& neighbor_list, arma::mat& y, arma::mat& s, arma::mat& X, arma::mat& cond_cov);
+RcppExport SEXP _sgp_cmake_one_pred_sparse(SEXP neighbor_listSEXP, SEXP ySEXP, SEXP sSEXP, SEXP XSEXP, SEXP cond_covSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List& >::type neighbor_list(neighbor_listSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type s(sSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type cond_cov(cond_covSEXP);
+    rcpp_result_gen = Rcpp::wrap(cmake_one_pred_sparse(neighbor_list, y, s, X, cond_cov));
+    return rcpp_result_gen;
+END_RCPP
+}
+// csolve_for_A_and_D_2d
+Rcpp::List csolve_for_A_and_D_2d(arma::sp_mat& cov_cur, Rcpp::List& neighbor_list);
+RcppExport SEXP _sgp_csolve_for_A_and_D_2d(SEXP cov_curSEXP, SEXP neighbor_listSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::sp_mat& >::type cov_cur(cov_curSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List& >::type neighbor_list(neighbor_listSEXP);
+    rcpp_result_gen = Rcpp::wrap(csolve_for_A_and_D_2d(cov_cur, neighbor_list));
+    return rcpp_result_gen;
+END_RCPP
+}
+// csparse_quadratic_form_symm_2d
+double csparse_quadratic_form_symm_2d(arma::colvec& u, arma::sp_mat& A, arma::colvec& D, Rcpp::List& neighbor_list);
+RcppExport SEXP _sgp_csparse_quadratic_form_symm_2d(SEXP uSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::colvec& >::type u(uSEXP);
+    Rcpp::traits::input_parameter< arma::sp_mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< arma::colvec& >::type D(DSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List& >::type neighbor_list(neighbor_listSEXP);
+    rcpp_result_gen = Rcpp::wrap(csparse_quadratic_form_symm_2d(u, A, D, neighbor_list));
+    return rcpp_result_gen;
+END_RCPP
+}
+// csparse_quadratic_form_asymm_2d
+double csparse_quadratic_form_asymm_2d(arma::colvec u, arma::colvec v, arma::sp_mat A, arma::colvec D, Rcpp::List neighbor_list);
+RcppExport SEXP _sgp_csparse_quadratic_form_asymm_2d(SEXP uSEXP, SEXP vSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::colvec >::type u(uSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type v(vSEXP);
+    Rcpp::traits::input_parameter< arma::sp_mat >::type A(ASEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type D(DSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type neighbor_list(neighbor_listSEXP);
+    rcpp_result_gen = Rcpp::wrap(csparse_quadratic_form_asymm_2d(u, v, A, D, neighbor_list));
+    return rcpp_result_gen;
+END_RCPP
+}
+// csolve_for_B_and_b_2d
+Rcpp::List csolve_for_B_and_b_2d(arma::mat& y, arma::mat& X, arma::sp_mat& A, arma::colvec& D, Rcpp::List& neighbor_list, arma::mat& precision_beta);
+RcppExport SEXP _sgp_csolve_for_B_and_b_2d(SEXP ySEXP, SEXP XSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP, SEXP precision_betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::sp_mat& >::type A(ASEXP);
+    Rcpp::traits::input_parameter< arma::colvec& >::type D(DSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List& >::type neighbor_list(neighbor_listSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type precision_beta(precision_betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(csolve_for_B_and_b_2d(y, X, A, D, neighbor_list, precision_beta));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_sgp_cinv", (DL_FUNC) &_sgp_cinv, 1},
@@ -156,6 +228,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sgp_csparse_quadratic_form_symm", (DL_FUNC) &_sgp_csparse_quadratic_form_symm, 4},
     {"_sgp_csparse_quadratic_form_asymm", (DL_FUNC) &_sgp_csparse_quadratic_form_asymm, 5},
     {"_sgp_csolve_for_B_and_b", (DL_FUNC) &_sgp_csolve_for_B_and_b, 6},
+    {"_sgp_cmake_one_pred_sparse", (DL_FUNC) &_sgp_cmake_one_pred_sparse, 5},
+    {"_sgp_csolve_for_A_and_D_2d", (DL_FUNC) &_sgp_csolve_for_A_and_D_2d, 2},
+    {"_sgp_csparse_quadratic_form_symm_2d", (DL_FUNC) &_sgp_csparse_quadratic_form_symm_2d, 4},
+    {"_sgp_csparse_quadratic_form_asymm_2d", (DL_FUNC) &_sgp_csparse_quadratic_form_asymm_2d, 5},
+    {"_sgp_csolve_for_B_and_b_2d", (DL_FUNC) &_sgp_csolve_for_B_and_b_2d, 6},
     {NULL, NULL, 0}
 };
 

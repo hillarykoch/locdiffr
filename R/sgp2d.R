@@ -43,7 +43,7 @@ run_2dsgp <-
             max_max_range <- diff(range(S))
         }
         max_range <-
-            10# max(apply(Reduce(`+`, y), 2, function(xx) get_max_range(xx, max_max_range)))
+            25# max(apply(Reduce(`+`, y), 2, function(xx) get_max_range(xx, max_max_range)))
         
         # These all default to NULL
         beta <- init_beta

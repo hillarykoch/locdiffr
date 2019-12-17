@@ -45,3 +45,23 @@ csolve_for_B_and_b <- function(y, X, A, D, neighbor_list, precision_beta) {
     .Call(`_sgp_csolve_for_B_and_b`, y, X, A, D, neighbor_list, precision_beta)
 }
 
+cmake_one_pred_sparse <- function(neighbor_list, y, s, X, cond_cov) {
+    .Call(`_sgp_cmake_one_pred_sparse`, neighbor_list, y, s, X, cond_cov)
+}
+
+csolve_for_A_and_D_2d <- function(cov_cur, neighbor_list) {
+    .Call(`_sgp_csolve_for_A_and_D_2d`, cov_cur, neighbor_list)
+}
+
+csparse_quadratic_form_symm_2d <- function(u, A, D, neighbor_list) {
+    .Call(`_sgp_csparse_quadratic_form_symm_2d`, u, A, D, neighbor_list)
+}
+
+csparse_quadratic_form_asymm_2d <- function(u, v, A, D, neighbor_list) {
+    .Call(`_sgp_csparse_quadratic_form_asymm_2d`, u, v, A, D, neighbor_list)
+}
+
+csolve_for_B_and_b_2d <- function(y, X, A, D, neighbor_list, precision_beta) {
+    .Call(`_sgp_csolve_for_B_and_b_2d`, y, X, A, D, neighbor_list, precision_beta)
+}
+
