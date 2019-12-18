@@ -21,5 +21,6 @@ downsample_to_equal_reads <- function(data_list) {
         temp[rles$values] <- rles$lengths
         out[[i]] <- temp
     }
+    out <- purrr::map(out, as.matrix)
     out
 }
