@@ -86,6 +86,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// crunif
+arma::colvec crunif(unsigned int n, unsigned int seed);
+RcppExport SEXP _sgp_crunif(SEXP nSEXP, SEXP seedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< unsigned int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(crunif(n, seed));
+    return rcpp_result_gen;
+END_RCPP
+}
 // csolve_for_A_and_D
 Rcpp::List csolve_for_A_and_D(arma::sp_mat& cov_cur, Rcpp::List& neighbor_list);
 RcppExport SEXP _sgp_csolve_for_A_and_D(SEXP cov_curSEXP, SEXP neighbor_listSEXP) {
@@ -144,8 +156,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // cmake_one_pred_sparse
-arma::colvec cmake_one_pred_sparse(Rcpp::List& neighbor_list, arma::mat& y, arma::mat& s, arma::mat& X, arma::mat& cond_cov);
-RcppExport SEXP _sgp_cmake_one_pred_sparse(SEXP neighbor_listSEXP, SEXP ySEXP, SEXP sSEXP, SEXP XSEXP, SEXP cond_covSEXP) {
+arma::colvec cmake_one_pred_sparse(Rcpp::List& neighbor_list, arma::mat& y, arma::mat& s, arma::mat& X, arma::mat& cond_cov, unsigned int SEED);
+RcppExport SEXP _sgp_cmake_one_pred_sparse(SEXP neighbor_listSEXP, SEXP ySEXP, SEXP sSEXP, SEXP XSEXP, SEXP cond_covSEXP, SEXP SEEDSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -154,7 +166,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat& >::type s(sSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type cond_cov(cond_covSEXP);
-    rcpp_result_gen = Rcpp::wrap(cmake_one_pred_sparse(neighbor_list, y, s, X, cond_cov));
+    Rcpp::traits::input_parameter< unsigned int >::type SEED(SEEDSEXP);
+    rcpp_result_gen = Rcpp::wrap(cmake_one_pred_sparse(neighbor_list, y, s, X, cond_cov, SEED));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -224,11 +237,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sgp_get_ldet", (DL_FUNC) &_sgp_get_ldet, 1},
     {"_sgp_fastMeanFilter", (DL_FUNC) &_sgp_fastMeanFilter, 2},
     {"_sgp_cpwdist", (DL_FUNC) &_sgp_cpwdist, 2},
+    {"_sgp_crunif", (DL_FUNC) &_sgp_crunif, 2},
     {"_sgp_csolve_for_A_and_D", (DL_FUNC) &_sgp_csolve_for_A_and_D, 2},
     {"_sgp_csparse_quadratic_form_symm", (DL_FUNC) &_sgp_csparse_quadratic_form_symm, 4},
     {"_sgp_csparse_quadratic_form_asymm", (DL_FUNC) &_sgp_csparse_quadratic_form_asymm, 5},
     {"_sgp_csolve_for_B_and_b", (DL_FUNC) &_sgp_csolve_for_B_and_b, 6},
-    {"_sgp_cmake_one_pred_sparse", (DL_FUNC) &_sgp_cmake_one_pred_sparse, 5},
+    {"_sgp_cmake_one_pred_sparse", (DL_FUNC) &_sgp_cmake_one_pred_sparse, 6},
     {"_sgp_csolve_for_A_and_D_2d", (DL_FUNC) &_sgp_csolve_for_A_and_D_2d, 2},
     {"_sgp_csparse_quadratic_form_symm_2d", (DL_FUNC) &_sgp_csparse_quadratic_form_symm_2d, 4},
     {"_sgp_csparse_quadratic_form_asymm_2d", (DL_FUNC) &_sgp_csparse_quadratic_form_asymm_2d, 5},

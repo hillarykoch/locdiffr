@@ -29,6 +29,10 @@ cpwdist <- function(locs1, locs2) {
     .Call(`_sgp_cpwdist`, locs1, locs2)
 }
 
+crunif <- function(n, seed) {
+    .Call(`_sgp_crunif`, n, seed)
+}
+
 csolve_for_A_and_D <- function(cov_cur, neighbor_list) {
     .Call(`_sgp_csolve_for_A_and_D`, cov_cur, neighbor_list)
 }
@@ -45,8 +49,8 @@ csolve_for_B_and_b <- function(y, X, A, D, neighbor_list, precision_beta) {
     .Call(`_sgp_csolve_for_B_and_b`, y, X, A, D, neighbor_list, precision_beta)
 }
 
-cmake_one_pred_sparse <- function(neighbor_list, y, s, X, cond_cov) {
-    .Call(`_sgp_cmake_one_pred_sparse`, neighbor_list, y, s, X, cond_cov)
+cmake_one_pred_sparse <- function(neighbor_list, y, s, X, cond_cov, SEED) {
+    .Call(`_sgp_cmake_one_pred_sparse`, neighbor_list, y, s, X, cond_cov, SEED)
 }
 
 csolve_for_A_and_D_2d <- function(cov_cur, neighbor_list) {

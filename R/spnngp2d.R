@@ -80,7 +80,6 @@ run_2dnnsgp <- function(y,
 
     # cor cur is the sparse approximation to the
     #   exponential correlation plus the nugget (not quite a correlation actually)
-    # dtemp <- cpwdist(s, s)
     dtemp <- fields::rdist(S)
 
     neighbor_list <- get_2d_neighbor_list(y, num_neighbors_loc = num_neighbors_loc, num_neighbors_win = num_neighbors_win)

@@ -76,7 +76,6 @@ extend_mcmc <- function(fit,
         sd_beta = sd_beta,
         init_beta = init_beta,
         nugget_sd = nugget_sd,
-        iters = iters,
-        burnin = 0
+        iters = iters
     )
 }

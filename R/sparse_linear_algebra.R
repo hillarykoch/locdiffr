@@ -87,11 +87,13 @@ make_pred_sparse <- function(fit, y, s, X, stationary_iterations){
                                      .y = seq_along(fit$neighbor_info$neighbor_list),
                                      ~ c(.x, .y))
     for(j in 1:ncol(preds)) {
+        rseed <- round(runif(1, 1, 10^10))
         preds[,j] <- cmake_one_pred_sparse(neighbor_list_mod,
                                            y,
                                            s,
                                            X,
-                                           cond_covs[[j]])
+                                           cond_covs[[j]],
+                                           rseed)
     }
     preds <- preds + Xb
     preds <- sweep(preds, 1, rowMeans(y), `+`)
