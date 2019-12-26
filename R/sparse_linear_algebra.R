@@ -95,7 +95,6 @@ make_pred_sparse <- function(fit, y, s, X, stationary_iterations){
                                            cond_covs[[j]],
                                            rseed)
     }
-    preds <- preds + Xb
     preds <- sweep(preds, 1, rowMeans(y), `+`)
     preds
 }

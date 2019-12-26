@@ -119,15 +119,11 @@ arma::colvec cmake_one_pred_sparse(Rcpp::List& neighbor_list,
     arma::colvec z(n, arma::fill::none);
     arma::mat L;
 
-    // std::default_random_engine generator;
-    // std::uniform_real_distribution<double> runif(0.0,1.0);
-
     arma::colvec uniform_rv;
     uniform_rv = crunif(n, SEED);
     normal standard_normal;
 
     for(auto i = 0; i < n; i++) {
-        // z(i) = quantile(standard_normal, runif(generator));
         z(i) = quantile(standard_normal, uniform_rv[i]);
     }
 
