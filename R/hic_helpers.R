@@ -28,7 +28,7 @@ downsample_to_equal_reads <- function(data_list) {
 get_permutation_data <- function(dat, modidx) {
     # dat is a Hi-C data matrix
     # modidx is the array of indices which will be replaced with permuted data
-    molten <- data.table::melt(as.matrix(dat))
+    molten <- reshape2::melt(unname(as.matrix(dat)))
     diffs <- molten[,2] - molten[,1]
     keepidx <- diffs > 0
     
