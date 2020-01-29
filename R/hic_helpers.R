@@ -47,7 +47,7 @@ get_permutation_data <- function(dat, modidx) {
                          "idx_stop" = seq(sum(bkgrd$diffs == i)) + curdiff)
         idx_list[[curdiff]] <-
             dplyr::mutate(df, "val" = (
-                dplyr::filter(bkgrd, diffs == curdiff) %>% select("value") %>% `[[` (1)
+                dplyr::filter(bkgrd, diffs == curdiff) %>% dplyr::select("value") %>% `[[` (1)
             ))
     }
     
