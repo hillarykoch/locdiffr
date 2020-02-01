@@ -32,8 +32,14 @@ get_loc_sim <-
         if(h > 0) {
             smoo1 <- fastMeanFilter(mat1, h)
             smoo2 <- fastMeanFilter(mat2, h)    
+        } else {
+            smoo1 <- mat1
+            smoo2 <- mat2
         }
-        nd <- nrow(mat1)
+        rm(mat1)
+        rm(mat2)
+        
+        nd <- nrow(smoo1)
         scoremat <- stdmat <-  matrix(0, nd, win_max)
         for (i in win_min:win_max) {
             l <- nd - i + 1
