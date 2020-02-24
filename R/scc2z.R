@@ -8,37 +8,35 @@ stripones <- function(sc) {
     return(c(1,loc2))
 }
 
-get_z <- function(ys) {
-    locs <- stripones(ys)
-    data.frame(crd = locs[1]:locs[2], scc = ys[locs[1]:locs[2]]) %>%
+get_z <- function(SCCs) {
+    locs <- stripones(SCCs)
+    data.frame(crd = locs[1]:locs[2], scc = SCCs[locs[1]:locs[2]]) %>%
         dplyr::mutate(z_s = fishT(scc))
 }
 
 fishT <- function(y) {
     y[y >= 1 - 1e-06] <- 1 - 1e-06
     y[y <= -(1 - 1e-06)] = -(1 - 1e-06)
-    .5 * (log((1 + y) / (1 - y)))
+    0.5 * (log((1 + y) / (1 - y)))
 }
 
 # scan throught chromsome using different window sizes
 get_loc_sim <-
     function(mat1,
              mat2,
-             h = 5,
-             resol = 40000,
-             win_min = 6,
-             win_max = 50,
-             CI = 0) {
+             h = 0,
+             win_min = 25,
+             win_max = 25) {
         if(h > 0) {
             smoo1 <- fastMeanFilter(mat1, h)
-            smoo2 <- fastMeanFilter(mat2, h)    
+            smoo2 <- fastMeanFilter(mat2, h)
         } else {
             smoo1 <- mat1
             smoo2 <- mat2
         }
         rm(mat1)
         rm(mat2)
-        
+
         nd <- nrow(smoo1)
         scoremat <- stdmat <-  matrix(0, nd, win_max)
         for (i in win_min:win_max) {
@@ -50,7 +48,7 @@ get_loc_sim <-
                     scoremat[j, i] <- 1
                     stdmat[j, i] <- 0
                 } else {
-                    LSIM <- hic_ld(smoo1, smoo2, win, resol)
+                    LSIM <- hic_ld(smoo1, smoo2, win)
                     scoremat[j, i] = LSIM$scc
                     stdmat[j, i] = LSIM$std
                 }
@@ -63,15 +61,10 @@ get_loc_sim <-
         scoremat[which(is.na(scoremat), arr.ind = TRUE)] <- 1
         stdmat[which(is.na(stdmat), arr.ind = TRUE)] <- 0
 
-        if (CI == 1) {
-            lwb <- scoremat - 3 * stdmat
-            list(scoremat, lwb)
-        } else {
-            scoremat
-        }
+        scoremat
     }
 
-hic_ld <- function(smoo1, smoo2, rang, resol = 40000) {
+hic_ld <- function(smoo1, smoo2, rang, resol = 50000) {
     sub_smoo1 <- smoo1[rang, rang]
     sub_smoo2 <- smoo2[rang, rang]
 

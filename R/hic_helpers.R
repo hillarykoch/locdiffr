@@ -1,12 +1,20 @@
+check_lower_tri <- function(m) {
+    all(m[upper.tri(m)] == 0) & any(m[lower.tri(m)] > 0)
+}
+
 downsample_to_equal_reads <- function(data_list) {
+    if(!all(unlist(purrr::map(data_list, check_lower_tri)))) {
+        stop("Data matrices must be lower-triangular.")
+    }
+
     # total counts in each data matrix
     maxes <- purrr::map(data_list, sum) %>%
         purrr::map(max) %>%
         unlist
-    
+
     # what level to downsample to
     tot_counts <- min(maxes)
-    
+
     # only downsample data matrices who have more reads than tot_counts
     sample_idx <- which(!(maxes == tot_counts))
     out <- data_list
@@ -31,15 +39,15 @@ get_permutation_data <- function(dat, modidx) {
     molten <- reshape2::melt(unname(as.matrix(dat)))
     diffs <- molten[,2] - molten[,1]
     keepidx <- diffs > 0
-    
+
     bkgrd <- data.frame("diffs" = diffs[keepidx], "value" = molten[keepidx,"value"])
     resampling <- tapply(bkgrd$value, INDEX = bkgrd$diffs, FUN = function(X) sample(X))
     for(i in seq_along(unique(bkgrd$diffs))[-length(unique(bkgrd$diffs))]) {
         curdiff <- unique(bkgrd$diffs)[i]
         bkgrd[bkgrd$diffs == curdiff,"value"] <- resampling[[curdiff]]
     }
-    
-    
+
+
     idx_list <- list()
     for (i in seq_along(unique(bkgrd$diffs))) {
         curdiff <- unique(bkgrd$diffs)[i]
@@ -50,7 +58,7 @@ get_permutation_data <- function(dat, modidx) {
                 dplyr::filter(bkgrd, diffs == curdiff) %>% dplyr::select("value") %>% `[[` (1)
             ))
     }
-    
+
     bind1 <- dplyr::bind_rows(idx_list)
     mirror <-
         data.frame(
@@ -60,7 +68,7 @@ get_permutation_data <- function(dat, modidx) {
         )
     permuted_mat <- as.matrix(data.table::dcast(data = dplyr::bind_rows(list(bind1, mirror)), idx_start ~ idx_stop)[,-1])
     diag(permuted_mat) <- 0
-    
+
     dat[modidx, modidx] <- permuted_mat[modidx, modidx]
     dat
 }

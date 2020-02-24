@@ -70,17 +70,6 @@ make_pred_sparse <- function(fit, y, s, X, stationary_iterations){
     np <- nrow(y)
     d <- fit$neighbor_info$d
     col_index <- fit$neighbor_info$neighbor_column_major_index
-    # cond_covs <-
-    #     purrr::map2(
-    #         .x = stationary_covar[, "sigma"],
-    #         .y = stationary_covar[, "range_s"],
-    #         ~ get_cor_sparse(
-    #             d,
-    #             range = .y,
-    #             col_index = col_index
-    #         ) * .x
-    #     ) %>%
-    #     purrr::map(as.matrix)
 
     preds <- matrix(NA, nrow = nrow(y), ncol = length(stationary_iterations))
     neighbor_list_mod <- purrr::map2(.x = fit$neighbor_info$neighbor_list,
