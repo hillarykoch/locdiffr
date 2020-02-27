@@ -23,6 +23,7 @@ arma::colvec crunif(unsigned int n, unsigned int seed) {
     return out;
 }
 
+// Pseudocode 2 of Finley et al. 2019
 // [[Rcpp::export]]
 Rcpp::List csolve_for_A_and_D(arma::sp_mat& cov_cur,
                               Rcpp::List& neighbor_list) {

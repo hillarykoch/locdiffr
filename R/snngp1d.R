@@ -188,7 +188,7 @@ run_nnsgp <- function(y,
             sum
         ldet_star <- abs(sum(log(A_and_D_star$D@x)))
 
-        R <- dgamma(errprec_star, as, bs) - dgamma(errprec, as, bs) +
+        R <- dgamma(errprec_star, as, bs, log = TRUE) - dgamma(errprec, as, bs, log = TRUE) +
             0.5 * (SS - SS_star) +
             reps / 2 * (ldet_cur - ldet_star)
 
