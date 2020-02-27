@@ -39,4 +39,22 @@ run_nnsgp <- function(y, s, X, num_neighbors = 25, min_range = 1,
 }
 \author{\email{hbk5086@psu.edu}}
 \examples{
+# simulate some toy data
+s <- matrix(1:500, ncol = 1)
+X <- fda::getbasismatrix(evalarg = s, fda::create.bspline.basis(rangeval = range(s), nbasis = 4, norder = 4))
+beta <- c(2,-2,1,-.5)
+rho <- 5
+covmat <- fields::Exponential(as.matrix(dist(s)), range = rho)
+sigma2 <- 2
+epsilon2 <- 1 / sigma2
+L <- chol(sigma2*covmat)
+
+samplesize <- 5
+y <- replicate(samplesize, t(L) %*% rnorm(length(s)) + X %*% beta + rnorm(length(s), mean = 0, sd = sqrt(sigma2 * epsilon2)))[,1,]
+
+################################################################################
+# Not run:
+# fit <- run_nnsgp(y = y, s = s, X = X, num_neighbors = 10, iters = 100)
+################################################################################
+
 }

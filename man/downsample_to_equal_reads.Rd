@@ -19,3 +19,10 @@ The matrices MUST be lower-triangular.
 A list of lower-triangular data matrices, downsampled to have equal numbers of read counts.
 }
 \author{\email{hbk5086@psu.edu}}
+\examples{
+# make data lower-tri
+brd2 <- map(brd2, ~replace(.x, upper.tri(.x), 0))
+
+# downsample
+downsampled_data <- downsample_to_equal_reads(brd2)
+}
