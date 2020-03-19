@@ -6,6 +6,7 @@
 \usage{
 FDR(theta, alpha = .1, nthresh = 100)
 FDX(theta, alpha = .1, beta = .9, nthresh = 100)
+}
 \arguments{
   \item{theta}{Boolean matrix describing how often each sampled value within each scan window was less than the mean process. This matrix is of dimension (number of predictions) by W.}
   \item{alpha}{Numeric between 0 and 1. Confidence level for making rejections.}
