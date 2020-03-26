@@ -82,12 +82,52 @@ FCR <- function(theta_list,
         }
     }
     level <- min(thresh[BFCR < alpha])
-    reject <- weighted_rej > level
+    reject <- rej_prob >= thresh[which(BFCR < alpha)[1]]
+    reject_list <- split(reject, cluster_size_vec) %>% `names<-` (names(theta_list))
     
     list(
         level = level,
-        reject_list = split(reject, cluster_size_vec) %>% `names<-` (names(theta_list)),
+        reject_list = map(reject_list, unname),
         thresh = thresh,
         BFCR = BFCR
     )
 }
+
+# this is the same as FCR, except that the denominator
+#   for the FDR is the sum of all weights, not just rejected weights
+# as in Benjamini (1997)
+# wFDR <- function(theta_list,
+#                  alpha = 0.1,
+#                  nthresh = 100) {
+#     rej_prob_list <- map(theta_list, rowMeans)
+#     cluster_sizes <- # Area of the scanning windows
+#         (as.numeric(names(theta_list))) ^ 2 / 4
+#     cluster_size_vec <-
+#         # expanding the cluster sizes for ease of computing denominator of BFCR
+#         map2(cluster_sizes, rej_prob_list, ~ rep(.x, times = length(.y))) %>%
+#         unlist
+#     
+#     # the larger this value is, the higher the FCR
+#     weighted_rej <-
+#         map2(cluster_sizes, rej_prob_list, ~ .x * .y) %>% unlist
+#     rej_prob <- unlist(rej_prob_list)
+#     thresh <- seq(0, 1, length = nthresh)
+#     
+#     wBFDR <- rep(0, nthresh)
+#     for (j in 1:nthresh) {
+#         idx <- rej_prob >= thresh[j]
+#         if (sum(idx) > 0) {
+#             wBFDR[j] <- 1 - sum(weighted_rej[idx]) / sum(cluster_size_vec)
+#         }
+#     }
+#     level <- min(thresh[wBFDR < alpha])
+#     reject <- rej_prob >= thresh[which(wBFDR < alpha)[1]]
+#     reject_list <- split(reject, cluster_size_vec) %>% `names<-` (names(theta_list))
+#     
+#     list(
+#         level = level,
+#         reject_list = map(reject_list, unname),
+#         thresh = thresh,
+#         wBFDR = wBFDR
+#     )
+# }

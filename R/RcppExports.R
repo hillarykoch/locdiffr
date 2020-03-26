@@ -29,6 +29,10 @@ cpwdist <- function(locs1, locs2) {
     .Call(`_sgp_cpwdist`, locs1, locs2)
 }
 
+test_hierarchically <- function(filepath, alpha, prob_theta_equals_zero) {
+    .Call(`_sgp_test_hierarchically`, filepath, alpha, prob_theta_equals_zero)
+}
+
 crunif <- function(n, seed) {
     .Call(`_sgp_crunif`, n, seed)
 }

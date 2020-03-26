@@ -86,6 +86,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// test_hierarchically
+arma::mat test_hierarchically(std::string filepath, double alpha, arma::colvec prob_theta_equals_zero);
+RcppExport SEXP _sgp_test_hierarchically(SEXP filepathSEXP, SEXP alphaSEXP, SEXP prob_theta_equals_zeroSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type filepath(filepathSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type prob_theta_equals_zero(prob_theta_equals_zeroSEXP);
+    rcpp_result_gen = Rcpp::wrap(test_hierarchically(filepath, alpha, prob_theta_equals_zero));
+    return rcpp_result_gen;
+END_RCPP
+}
 // crunif
 arma::colvec crunif(unsigned int n, unsigned int seed);
 RcppExport SEXP _sgp_crunif(SEXP nSEXP, SEXP seedSEXP) {
@@ -237,6 +250,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sgp_get_ldet", (DL_FUNC) &_sgp_get_ldet, 1},
     {"_sgp_fastMeanFilter", (DL_FUNC) &_sgp_fastMeanFilter, 2},
     {"_sgp_cpwdist", (DL_FUNC) &_sgp_cpwdist, 2},
+    {"_sgp_test_hierarchically", (DL_FUNC) &_sgp_test_hierarchically, 3},
     {"_sgp_crunif", (DL_FUNC) &_sgp_crunif, 2},
     {"_sgp_csolve_for_A_and_D", (DL_FUNC) &_sgp_csolve_for_A_and_D, 2},
     {"_sgp_csparse_quadratic_form_symm", (DL_FUNC) &_sgp_csparse_quadratic_form_symm, 4},

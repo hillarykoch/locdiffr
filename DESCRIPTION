@@ -21,7 +21,6 @@ Imports:
     stats
 LinkingTo:
     Rcpp,
-    RcppArmadillo,
-    BH
+    RcppArmadillo
 SystemRequirements:
     C++11
