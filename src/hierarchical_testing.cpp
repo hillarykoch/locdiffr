@@ -17,7 +17,27 @@ using namespace std;
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp11)]]
 
-// count/print nodes
+// For making adjacency matrix, to then produce LGF
+// [[Rcpp::export]]
+arma::sp_mat cmake_adj_mat(arma::sp_mat adj_mat,
+                            arma::colvec locsj,
+                            arma::colvec winsizes,
+                            arma::colvec cumsum_nlocs,
+                            int j) {
+    int diff_win = winsizes(j) - winsizes(j-1);
+    for(int i = 1; i <= locsj.size(); i++) {
+        if(i <= diff_win) {
+            adj_mat.row(cumsum_nlocs(j-1) + i - 1).cols(cumsum_nlocs(j), cumsum_nlocs(j) + i - 1).ones();
+        } else if(i >= (locsj.size() - diff_win + 1)) {
+            adj_mat.row(cumsum_nlocs(j-1) + i - 1).cols(cumsum_nlocs(j) + i - 1 - diff_win, cumsum_nlocs(j+1) - 1).ones();
+        } else {
+            adj_mat.row(cumsum_nlocs(j-1) + i - 1).cols(cumsum_nlocs(j) + i - 1 - diff_win, cumsum_nlocs(j) + i - 1).ones();
+        }
+    }
+    return adj_mat;
+}
+
+// Run DAGGER
 // [[Rcpp::export]]
 arma::mat test_hierarchically(std::string filepath, double alpha, arma::colvec prob_theta_equals_zero) {
     ListDigraph gr;

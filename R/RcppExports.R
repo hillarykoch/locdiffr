@@ -29,6 +29,10 @@ cpwdist <- function(locs1, locs2) {
     .Call(`_sgp_cpwdist`, locs1, locs2)
 }
 
+cmake_adj_mat <- function(adj_mat, locsj, winsizes, cumsum_nlocs, j) {
+    .Call(`_sgp_cmake_adj_mat`, adj_mat, locsj, winsizes, cumsum_nlocs, j)
+}
+
 test_hierarchically <- function(filepath, alpha, prob_theta_equals_zero) {
     .Call(`_sgp_test_hierarchically`, filepath, alpha, prob_theta_equals_zero)
 }

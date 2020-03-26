@@ -15,24 +15,9 @@ make_adj_matrix_from_z_list <- function(z_list, irrep_list) {
             x = 1,
             dims = c(nlocs, nlocs)
         )
-    
-    # would like to migrate this part to C++
     for (j in 1:(length(locs) - 1)) {
-        for (i in seq_along(locs[[j]])) {
-            if (i <= diff(winsizes[j:(j + 1)])) {
-                # starting boundary effect
-                adj_mat[cumsum_nlocs[j] + i,
-                        (cumsum_nlocs[j + 1] + 1):(cumsum_nlocs[j + 1] + i)] <- 1
-            } else if (i >= (length(locs[[j]]) - diff(winsizes[j:(j + 1)]) + 1)) {
-                # ending boundary effect
-                adj_mat[cumsum_nlocs[j] + i,
-                        (cumsum_nlocs[j + 1] + i - diff(winsizes[j:(j + 1)])):cumsum_nlocs[j + 2]] <- 1
-            } else {
-                # regular middle windows
-                adj_mat[cumsum_nlocs[j] + i,
-                        (cumsum_nlocs[j + 1] + i - diff(winsizes[j:(j + 1)])):(cumsum_nlocs[j + 1] + i)] <- 1
-            }
-        }
+        adj_mat <-
+            cmake_adj_mat(adj_mat, locs[[j]], winsizes, cumsum_nlocs, j)
     }
     
     # Remove irreproducible sites from the adjacency matrix

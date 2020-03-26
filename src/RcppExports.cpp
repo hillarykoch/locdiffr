@@ -86,6 +86,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cmake_adj_mat
+arma::sp_mat cmake_adj_mat(arma::sp_mat adj_mat, arma::colvec locsj, arma::colvec winsizes, arma::colvec cumsum_nlocs, int j);
+RcppExport SEXP _sgp_cmake_adj_mat(SEXP adj_matSEXP, SEXP locsjSEXP, SEXP winsizesSEXP, SEXP cumsum_nlocsSEXP, SEXP jSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::sp_mat >::type adj_mat(adj_matSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type locsj(locsjSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type winsizes(winsizesSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type cumsum_nlocs(cumsum_nlocsSEXP);
+    Rcpp::traits::input_parameter< int >::type j(jSEXP);
+    rcpp_result_gen = Rcpp::wrap(cmake_adj_mat(adj_mat, locsj, winsizes, cumsum_nlocs, j));
+    return rcpp_result_gen;
+END_RCPP
+}
 // test_hierarchically
 arma::mat test_hierarchically(std::string filepath, double alpha, arma::colvec prob_theta_equals_zero);
 RcppExport SEXP _sgp_test_hierarchically(SEXP filepathSEXP, SEXP alphaSEXP, SEXP prob_theta_equals_zeroSEXP) {
@@ -250,6 +265,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sgp_get_ldet", (DL_FUNC) &_sgp_get_ldet, 1},
     {"_sgp_fastMeanFilter", (DL_FUNC) &_sgp_fastMeanFilter, 2},
     {"_sgp_cpwdist", (DL_FUNC) &_sgp_cpwdist, 2},
+    {"_sgp_cmake_adj_mat", (DL_FUNC) &_sgp_cmake_adj_mat, 5},
     {"_sgp_test_hierarchically", (DL_FUNC) &_sgp_test_hierarchically, 3},
     {"_sgp_crunif", (DL_FUNC) &_sgp_crunif, 2},
     {"_sgp_csolve_for_A_and_D", (DL_FUNC) &_sgp_csolve_for_A_and_D, 2},
