@@ -31,7 +31,7 @@ make_adj_matrix_from_z_list <- function(z_list, irrep_list) {
     )
 }
 
-write_LGF <- function(z_list, irrep_list, path) {
+write_LGF <- function(z_list, irrep_list, path = "lgf.txt") {
     dag_info <- make_adj_matrix_from_z_list(z_list, irrep_list)
     dag <-
         igraph::graph_from_adjacency_matrix(dag_info$adj, mode = "directed")
@@ -89,4 +89,25 @@ write_LGF <- function(z_list, irrep_list, path) {
                      col_names = FALSE,
                      append = TRUE)
     cat("done!\n")
+}
+
+test_hierarchically <- function(z_list,
+                                irrep_list,
+                                theta_list,
+                                alpha = 0.1,
+                                filepath = "lgf.txt") {
+    write_LGF(z_list = z_list,
+              irrep_list = irrep_list,
+              path = filepath)
+    prob_theta_equals_zero <-
+        map(theta_list, ~ 1 - rowMeans(.x)) %>%
+        map2(.y = irrep_list, ~ .x[!.y]) %>%
+        unlist
+    tested <-
+        ctest_hierarchically(filepath, alpha, prob_theta_equals_zero)
+    split_idx <-
+        rep(seq_along(irrep_list), unlist(map(irrep_list, ~ sum(!.x))))
+    rejects <- split(tested, split_idx)
+    names(rejects) <- names(irrep_list)
+    map(rejects, as.logical)
 }

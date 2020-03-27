@@ -2,9 +2,7 @@
 
 #include <RcppArmadillo.h>
 #include <lemon/list_graph.h>
-#include <lemon/dfs.h>
 #include <lemon/lgf_reader.h>
-#include <lemon/adaptors.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -39,7 +37,7 @@ arma::sp_mat cmake_adj_mat(arma::sp_mat adj_mat,
 
 // Run DAGGER
 // [[Rcpp::export]]
-arma::mat test_hierarchically(std::string filepath, double alpha, arma::colvec prob_theta_equals_zero) {
+arma::colvec ctest_hierarchically(std::string filepath, double alpha, arma::colvec prob_theta_equals_zero) {
     ListDigraph gr;
     ListDigraph::NodeMap<int> layer(gr);
     ListDigraph::NodeMap<int> label(gr);
@@ -75,11 +73,9 @@ arma::mat test_hierarchically(std::string filepath, double alpha, arma::colvec p
 
     // Matrix whose first column is node label,
     //  and second column is whether or not that node is rejected
-    arma::mat out(dagger.total_nodes(), 2, arma::fill::zeros);
+    arma::colvec out(dagger.total_nodes(), arma::fill::zeros);
     for(ListDigraph::NodeIt n(gr); n != INVALID; ++n){
-        out(dagger.label(n)-1, 0) = dagger.label(n);
-        out(dagger.label(n)-1, 1) = dagger.is_rejected(n);
+        out(dagger.label(n)-1) = dagger.is_rejected(n);
     }
-
     return out;
 }
