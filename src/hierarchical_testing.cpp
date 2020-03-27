@@ -60,14 +60,12 @@ arma::colvec ctest_hierarchically(std::string filepath, double alpha, arma::colv
 
     // Run the testing procedure
     int ncan;
-    int num_currently_rejected = dagger.num_currently_rejected();
-
     // For each layer, beginning at the root
     for(auto d = 0; d < max_depth; d++) {
         ncan = dagger.num_currently_candidates();
+        std::cout << ncan << std::endl;
         if(ncan > 0) {
             dagger.test_hypothesis_at_current_layer();
-            num_currently_rejected = dagger.num_currently_rejected();
         }
     }
 

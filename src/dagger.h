@@ -157,7 +157,7 @@ class Dagger {
 
             int num_below = 0;
             for(auto i = 0; i < ncan; i++) {
-                if(curr_alpha(i) < candidate_probabilities[i]) {
+                if(curr_alpha(i) <= candidate_probabilities[i]) {
                     num_below++;
                 }
             }
@@ -211,17 +211,17 @@ class Dagger {
 
             double upper_bound;
             std::tuple<int, std::vector<double>> below_dat;
-            for(auto i = 1; i <= ncan; i++) {
-                below_dat = num_nodes_with_null_prob_below_alphar(i);
+            for(auto r = 1; r <= ncan; r++) {
+                below_dat = num_nodes_with_null_prob_below_alphar(r);
 
-                if(std::get<0>(below_dat) < i) {
+                if(std::get<0>(below_dat) < r) {
                     // If we can no longer make any more rejections, no more candidates
-                    if(i == 1) {
+                    if(r == 1) {
                         for(ListDigraph::NodeIt n(_gr); n != INVALID; ++n) {
                             remove_candidate_hypothesis(n);
                         }
                     } else {
-                        below_dat = num_nodes_with_null_prob_below_alphar(i-1);
+                        below_dat = num_nodes_with_null_prob_below_alphar(r-1);
                         std::sort(std::get<1>(below_dat).begin(), std::get<1>(below_dat).end());
                         upper_bound = std::get<1>(below_dat)[std::get<0>(below_dat)];
 
