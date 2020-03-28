@@ -63,7 +63,6 @@ arma::mat ctest_hierarchically(std::string filepath, double alpha, arma::colvec 
     // For each layer, beginning at the root
     for(auto d = 0; d < max_depth; d++) {
         ncan = dagger.num_currently_candidates();
-        std::cout << "\nncan = " << ncan << std::endl;
         if(ncan > 0) {
             dagger.test_hypothesis_at_current_layer();
         }
