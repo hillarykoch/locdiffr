@@ -17,6 +17,7 @@ class Dagger {
         ListDigraph::NodeMap<double> _numInArcs;
         ListDigraph::NodeMap<int> _layer;
         ListDigraph::NodeMap<int> _label;
+        ListDigraph::NodeMap<int> _rank;
         ListDigraph::NodeMap<double> _effectiveLeafNum;
         ListDigraph::NodeMap<double> _effectiveNodeNum;
         ListDigraph::NodeMap<bool> _isRejected;
@@ -25,7 +26,7 @@ class Dagger {
         int _max_depth;
         arma::colvec _prob_theta_equals_zero;
 
-        Dagger(const ListDigraph& gr, const ListDigraph::NodeMap<int>& layer, const ListDigraph::NodeMap<int>& label, arma::colvec prob_theta_equals_zero, const double alpha, const int max_depth) :_gr(gr), _numOutArcs(gr), _numInArcs(gr), _layer(gr), _label(gr), _effectiveLeafNum(gr), _effectiveNodeNum(gr), _isRejected(gr, false), _isCandidateHypothesis(gr, false) {
+        Dagger(const ListDigraph& gr, const ListDigraph::NodeMap<int>& layer, const ListDigraph::NodeMap<int>& label, arma::colvec prob_theta_equals_zero, const arma::colvec rank_map, const double alpha, const int max_depth) :_gr(gr), _numOutArcs(gr), _numInArcs(gr), _layer(gr), _label(gr), _rank(gr), _effectiveLeafNum(gr), _effectiveNodeNum(gr), _isRejected(gr, false), _isCandidateHypothesis(gr, false) {
             // Create numInArcs and numOutArcs nodeMaps
             _alpha = alpha;
             _max_depth = max_depth;
@@ -34,6 +35,7 @@ class Dagger {
                 _numInArcs[n] = countInArcs(gr, n);
                 _layer[n] = layer[n];
                 _label[n] = label[n];
+                _rank[n] = rank_map[label[n]-1];
                 _prob_theta_equals_zero = prob_theta_equals_zero;
                 ++_totalNodes;
 
@@ -46,7 +48,7 @@ class Dagger {
             if(_totalNodes != prob_theta_equals_zero.size()) {
                 std::cout << "wrong number of probabilities passed" << std::endl;
             }
-            
+
             // Calculate effective number of leaves and effective number of nodes nodeMaps
             for (ListDigraph::NodeIt n(gr); n != INVALID; ++n) {
                 l = 0.0;
@@ -64,14 +66,12 @@ class Dagger {
                     _effectiveNodeNum[n] = m;
                 }
             }
-
-            
         }
 
         int total_nodes() {
             return _totalNodes;
         }
-        
+
         double out_arcs(const ListDigraph::Node& n) const {
             return _numOutArcs[n];
         }
@@ -86,6 +86,10 @@ class Dagger {
 
         double effective_node_num(const ListDigraph::Node& n) const {
             return _effectiveNodeNum[n];
+        }
+
+        double get_rank(const ListDigraph::Node& n) const {
+            return _rank[n];
         }
 
         int layer(const ListDigraph::Node& n) const {
@@ -141,8 +145,7 @@ class Dagger {
             return candidate_alphas;
         }
 
-        std::tuple<int, std::vector<double>> num_nodes_with_null_prob_below_alphar(const int r) const {
-            std::tuple<int, std::vector<double>> out;
+        int num_nodes_with_null_prob_below_alphar(const int r) const {
             int ncan = num_currently_candidates();
             arma::colvec curr_alpha = compute_alpha_for_fixed_r(r, ncan);
             std::vector<double> candidate_probabilities(ncan);
@@ -157,12 +160,11 @@ class Dagger {
 
             int num_below = 0;
             for(auto i = 0; i < ncan; i++) {
-                if(curr_alpha(i) <= candidate_probabilities[i]) {
+                if(candidate_probabilities[i] <= curr_alpha(i)) {
                     num_below++;
                 }
             }
-            out = std::make_tuple(num_below, candidate_probabilities);
-            return out;
+            return num_below;
         }
 
         void add_candidate_hypothesis(ListDigraph::Node& n) {
@@ -209,26 +211,22 @@ class Dagger {
                 return;
             }
 
-            double upper_bound;
-            std::tuple<int, std::vector<double>> below_dat;
+            int num_below;
             for(auto r = 1; r <= ncan; r++) {
-                below_dat = num_nodes_with_null_prob_below_alphar(r);
-
-                if(std::get<0>(below_dat) < r) {
+                num_below = num_nodes_with_null_prob_below_alphar(r);
+                if(num_below < r) {
                     // If we can no longer make any more rejections, no more candidates
                     if(r == 1) {
                         for(ListDigraph::NodeIt n(_gr); n != INVALID; ++n) {
                             remove_candidate_hypothesis(n);
                         }
                     } else {
-                        below_dat = num_nodes_with_null_prob_below_alphar(r-1);
-                        std::sort(std::get<1>(below_dat).begin(), std::get<1>(below_dat).end());
-                        upper_bound = std::get<1>(below_dat)[std::get<0>(below_dat)];
+                        num_below = num_nodes_with_null_prob_below_alphar(r-1);
 
                         for(ListDigraph::NodeIt n(_gr); n != INVALID; ++n) {
                             if(is_candidate_hypothesis(n)) {
                                 // if probability less than bound, reject
-                                if(_prob_theta_equals_zero(label(n)-1) < upper_bound) {
+                                if(get_rank(n) < num_below) {
                                     reject(n);
                                 } else {
                                     // otherwise, don't reject and simply remove from
@@ -251,7 +249,7 @@ class Dagger {
                 }
             }
             traverse();
-        }      
+        }
 };
 
 #endif

@@ -7,7 +7,7 @@ make_adj_matrix_from_z_list <- function(z_list, irrep_list) {
     winsizes <- as.numeric(names(locs))
     cumsum_nlocs <- c(0, map(locs, length) %>% unlist %>% cumsum)
     nlocs <- cumsum_nlocs[length(cumsum_nlocs)]
-
+    
     adj_mat <-
         Matrix::sparseMatrix(
             i = 1,
@@ -19,11 +19,11 @@ make_adj_matrix_from_z_list <- function(z_list, irrep_list) {
         adj_mat <-
             cmake_adj_mat(adj_mat, locs[[j]], winsizes, cumsum_nlocs, j)
     }
-
+    
     # Remove irreproducible sites from the adjacency matrix
     irrep_idx <- map(irrep_list, which) %>%
         map(~if(length(.x) == 0){ 0 } else{ .x }) %>%
-        map2(.y = head(cumsum_nlocs,-1), ~ if(.x == 0) { 0 } else {.x + .y}) %>%
+        map2(.y = head(cumsum_nlocs,-1), ~ if(.x[1] == 0) { 0 } else {.x + .y}) %>%
         unlist
     if(all(irrep_idx == 0)) {
         list(
@@ -44,23 +44,23 @@ write_LGF <- function(z_list, irrep_list, path = "lgf.txt") {
     dag <-
         igraph::graph_from_adjacency_matrix(dag_info$adj, mode = "directed")
     cat("done!\n")
-
+    
     # For the @nodes portion of the LGF file
     node <-
         data.frame("label" = seq_along(dag_info$layers),
                    "layer" = dag_info$layers)
-
+    
     # For the @arcs portion of the LGF file
     edges <- igraph::E(dag)
     arcs <- data.frame(
         "source" = as.numeric(igraph::tail_of(dag, edges)),
         "target" = as.numeric(igraph::head_of(dag, edges))
     )
-
+    
     # For the @attributes portion of the LGF file
     attrib <- data.frame("type" = "max_depth",
                          "label" = max(node$layer))
-
+    
     # Write the LGF file
     cat("Writing LGF file...")
     readr::write_tsv(data.frame("@nodes"),
@@ -71,7 +71,7 @@ write_LGF <- function(z_list, irrep_list, path = "lgf.txt") {
                      col_names = TRUE,
                      append = TRUE)
     cat("\n", file = path, append = TRUE)
-
+    
     readr::write_tsv(
         data.frame("@arcs"),
         path = path,
@@ -112,19 +112,22 @@ test_hierarchically <- function(z_list,
                   irrep_list = irrep_list,
                   path = filepath)
     }
-
-
+    
+    
     prob_theta_equals_zero <-
         map(theta_list, ~ 1 - rowMeans(.x)) %>%
-        map2(.y = irrep_list, ~ .x[!.y]) %>%
+        map2(.y = irrep_list, ~ .x[!.y])
+    rank_map <-
+        map(prob_theta_equals_zero, ~ rank(.x, ties.method = "min") - 1) %>%
         unlist
+    prob_theta_equals_zero <- unlist(prob_theta_equals_zero)
+    
+    
     cat("Testing...")
     tested <-
-        ctest_hierarchically(filepath, alpha, prob_theta_equals_zero)
+        ctest_hierarchically(filepath, alpha, prob_theta_equals_zero, rank_map)
     cat("done!\n")
     split_idx <-
         rep(seq_along(irrep_list), unlist(map(irrep_list, ~ sum(!.x))))
-    rejects <- split(tested, split_idx)
-    names(rejects) <- names(irrep_list)
-    map(rejects, as.logical)
+    split(tested, split_idx) %>% map(as.logical)
 }

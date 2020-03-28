@@ -102,15 +102,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // ctest_hierarchically
-arma::colvec ctest_hierarchically(std::string filepath, double alpha, arma::colvec prob_theta_equals_zero);
-RcppExport SEXP _sgp_ctest_hierarchically(SEXP filepathSEXP, SEXP alphaSEXP, SEXP prob_theta_equals_zeroSEXP) {
+arma::mat ctest_hierarchically(std::string filepath, double alpha, arma::colvec prob_theta_equals_zero, arma::colvec rank_map);
+RcppExport SEXP _sgp_ctest_hierarchically(SEXP filepathSEXP, SEXP alphaSEXP, SEXP prob_theta_equals_zeroSEXP, SEXP rank_mapSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::string >::type filepath(filepathSEXP);
     Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< arma::colvec >::type prob_theta_equals_zero(prob_theta_equals_zeroSEXP);
-    rcpp_result_gen = Rcpp::wrap(ctest_hierarchically(filepath, alpha, prob_theta_equals_zero));
+    Rcpp::traits::input_parameter< arma::colvec >::type rank_map(rank_mapSEXP);
+    rcpp_result_gen = Rcpp::wrap(ctest_hierarchically(filepath, alpha, prob_theta_equals_zero, rank_map));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -266,7 +267,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sgp_fastMeanFilter", (DL_FUNC) &_sgp_fastMeanFilter, 2},
     {"_sgp_cpwdist", (DL_FUNC) &_sgp_cpwdist, 2},
     {"_sgp_cmake_adj_mat", (DL_FUNC) &_sgp_cmake_adj_mat, 5},
-    {"_sgp_ctest_hierarchically", (DL_FUNC) &_sgp_ctest_hierarchically, 3},
+    {"_sgp_ctest_hierarchically", (DL_FUNC) &_sgp_ctest_hierarchically, 4},
     {"_sgp_crunif", (DL_FUNC) &_sgp_crunif, 2},
     {"_sgp_csolve_for_A_and_D", (DL_FUNC) &_sgp_csolve_for_A_and_D, 2},
     {"_sgp_csparse_quadratic_form_symm", (DL_FUNC) &_sgp_csparse_quadratic_form_symm, 4},

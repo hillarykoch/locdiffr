@@ -37,7 +37,7 @@ arma::sp_mat cmake_adj_mat(arma::sp_mat adj_mat,
 
 // Run DAGGER
 // [[Rcpp::export]]
-arma::colvec ctest_hierarchically(std::string filepath, double alpha, arma::colvec prob_theta_equals_zero) {
+arma::mat ctest_hierarchically(std::string filepath, double alpha, arma::colvec prob_theta_equals_zero, arma::colvec rank_map) {
     ListDigraph gr;
     ListDigraph::NodeMap<int> layer(gr);
     ListDigraph::NodeMap<int> label(gr);
@@ -54,20 +54,21 @@ arma::colvec ctest_hierarchically(std::string filepath, double alpha, arma::colv
         .nodeMap("layer", layer)
         .attribute("max_depth", max_depth)
         .run();
-    
+
     // Create a dagger object from the graph and observed probabilites
-    Dagger dagger(gr, layer, label, prob_theta_equals_zero, alpha, max_depth);
+    Dagger dagger(gr, layer, label, prob_theta_equals_zero, rank_map, alpha, max_depth);
 
     // Run the testing procedure
     int ncan;
     // For each layer, beginning at the root
     for(auto d = 0; d < max_depth; d++) {
         ncan = dagger.num_currently_candidates();
-        std::cout << ncan << std::endl;
+        std::cout << "\nncan = " << ncan << std::endl;
         if(ncan > 0) {
             dagger.test_hypothesis_at_current_layer();
         }
     }
+    
 
     // Matrix whose first column is node label,
     //  and second column is whether or not that node is rejected

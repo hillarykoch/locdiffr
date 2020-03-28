@@ -33,8 +33,8 @@ cmake_adj_mat <- function(adj_mat, locsj, winsizes, cumsum_nlocs, j) {
     .Call(`_sgp_cmake_adj_mat`, adj_mat, locsj, winsizes, cumsum_nlocs, j)
 }
 
-ctest_hierarchically <- function(filepath, alpha, prob_theta_equals_zero) {
-    .Call(`_sgp_ctest_hierarchically`, filepath, alpha, prob_theta_equals_zero)
+ctest_hierarchically <- function(filepath, alpha, prob_theta_equals_zero, rank_map) {
+    .Call(`_sgp_ctest_hierarchically`, filepath, alpha, prob_theta_equals_zero, rank_map)
 }
 
 crunif <- function(n, seed) {
