@@ -129,5 +129,5 @@ test_hierarchically <- function(z_list,
     cat("done!\n")
     split_idx <-
         rep(seq_along(irrep_list), unlist(map(irrep_list, ~ sum(!.x))))
-    split(tested, split_idx) %>% map(as.logical)
+    split(tested, split_idx) %>% map(as.logical) %>% setNames(names(z_list))
 }
