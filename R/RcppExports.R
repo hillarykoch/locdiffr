@@ -21,6 +21,14 @@ get_ldet <- function(Q) {
     .Call(`_sgp_get_ldet`, Q)
 }
 
+cpopulate_true_differences <- function(truth_mat, true_differences) {
+    .Call(`_sgp_cpopulate_true_differences`, truth_mat, true_differences)
+}
+
+cpopulate_rejected_differences <- function(rej_mat, rej_list, win_size) {
+    .Call(`_sgp_cpopulate_rejected_differences`, rej_mat, rej_list, win_size)
+}
+
 fastMeanFilter <- function(mat, h) {
     .Call(`_sgp_fastMeanFilter`, mat, h)
 }

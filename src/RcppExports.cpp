@@ -62,6 +62,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpopulate_true_differences
+arma::sp_mat cpopulate_true_differences(arma::sp_mat& truth_mat, arma::umat& true_differences);
+RcppExport SEXP _sgp_cpopulate_true_differences(SEXP truth_matSEXP, SEXP true_differencesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::sp_mat& >::type truth_mat(truth_matSEXP);
+    Rcpp::traits::input_parameter< arma::umat& >::type true_differences(true_differencesSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpopulate_true_differences(truth_mat, true_differences));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpopulate_rejected_differences
+arma::sp_mat cpopulate_rejected_differences(arma::sp_mat& rej_mat, arma::colvec& rej_list, uint win_size);
+RcppExport SEXP _sgp_cpopulate_rejected_differences(SEXP rej_matSEXP, SEXP rej_listSEXP, SEXP win_sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::sp_mat& >::type rej_mat(rej_matSEXP);
+    Rcpp::traits::input_parameter< arma::colvec& >::type rej_list(rej_listSEXP);
+    Rcpp::traits::input_parameter< uint >::type win_size(win_sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpopulate_rejected_differences(rej_mat, rej_list, win_size));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fastMeanFilter
 NumericMatrix fastMeanFilter(NumericMatrix mat, int h);
 RcppExport SEXP _sgp_fastMeanFilter(SEXP matSEXP, SEXP hSEXP) {
@@ -264,6 +289,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sgp_cgeteigs", (DL_FUNC) &_sgp_cgeteigs, 1},
     {"_sgp_cifelse_eigvals", (DL_FUNC) &_sgp_cifelse_eigvals, 2},
     {"_sgp_get_ldet", (DL_FUNC) &_sgp_get_ldet, 1},
+    {"_sgp_cpopulate_true_differences", (DL_FUNC) &_sgp_cpopulate_true_differences, 2},
+    {"_sgp_cpopulate_rejected_differences", (DL_FUNC) &_sgp_cpopulate_rejected_differences, 3},
     {"_sgp_fastMeanFilter", (DL_FUNC) &_sgp_fastMeanFilter, 2},
     {"_sgp_cpwdist", (DL_FUNC) &_sgp_cpwdist, 2},
     {"_sgp_cmake_adj_mat", (DL_FUNC) &_sgp_cmake_adj_mat, 5},
