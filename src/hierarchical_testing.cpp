@@ -75,5 +75,5 @@ arma::mat ctest_hierarchically(std::string filepath, double alpha, arma::colvec 
     for(ListDigraph::NodeIt n(gr); n != INVALID; ++n){
         out(dagger.label(n)-1) = dagger.is_rejected(n);
     }
-    return out;
+    return std::move(out);
 }

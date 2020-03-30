@@ -43,7 +43,7 @@ arma::mat cifelse_eigvals(arma::colvec eigvals, const double thresh) {
             eigvals(i) = 1 / eigvals(i);
         }
     }
-    return eigvals;
+    return std::move(eigvals);
 }
 
 // [[Rcpp::export]]
