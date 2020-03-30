@@ -21,7 +21,7 @@ compute_area_based_error_rate <- function(z_list, rej_list, true_differences) {
 
     #---------------------------------------------------------------------------
     # Loop over all true differences, making a boolean matrix where TRUE is a difference
-    truth_mat <- cpopulate_true_differences(truth_rcpp, (as.matrix(true_differences)-1))
+    truth_mat <- cpopulate_true_differences(truth_mat, (as.matrix(true_differences)-1))
 
     # Look through rejections, making a boolean matrix where TRUE is a rejection
     for(i in seq_along(rej_list)) {
