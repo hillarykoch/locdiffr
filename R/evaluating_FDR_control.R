@@ -39,15 +39,17 @@ compute_area_based_error_rate <- function(z_list, rej_list, true_differences) {
     # compute error rate quantities
     magnitude_halftri <- (L^2 - L) / 2 + L
     true_discoveries <- rej_mat & truth_mat
+    total_positives <- sum(truth_mat)
+
     false_discoveries <- rej_mat & !truth_mat
     num_true_negatives <- sum(!rej_mat & !truth_mat) - magnitude_halftri
     total_negatives <- (sum(!rej_mat) - magnitude_halftri)
     total_discoveries <- sum(rej_mat)
 
     FPR <- sum(false_discoveries) / total_negatives
-    FDR <- sum(false_discoveries) / (sum(false_discoveries) + num_true_negatives)
+    FDR <- sum(false_discoveries) / (sum(false_discoveries) + sum(true_discoveries))
     list(
-        "TPR" = sum(true_discoveries) / total_discoveries,
+        "TPR" = sum(true_discoveries) / total_positives,
         "FPR" = FPR,
         "TNR" = 1 - FPR,
         "FDR" = FDR,
