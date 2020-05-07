@@ -58,37 +58,82 @@ FDX <- function(theta,
 }
 
 wFDR <- function(theta_list,
-                alpha = 0.1,
-                nthresh = 100) {
+                 alpha = 0.1,
+                 nthresh = 100) {
     rej_prob_list <- map(theta_list, rowMeans)
+    
     cluster_sizes <- # Area of the scanning windows
         (as.numeric(names(theta_list))) ^ 2 / 4
     cluster_size_vec <-
-        # expanding the cluster sizes for ease of computing denominator of BFCR
+        # expanding the cluster sizes for ease of computing denominator of BwFDR
         map2(cluster_sizes, rej_prob_list, ~ rep(.x, times = length(.y))) %>%
         unlist
     
-    # the larger this value is, the higher the FCR
+    # the larger this value is, the higher the wFDR
     weighted_rej <-
         map2(cluster_sizes, rej_prob_list, ~ .x * .y) %>% unlist
     rej_prob <- unlist(rej_prob_list)
     thresh <- seq(0, 1, length = nthresh)
     
-    BFCR <- rep(0, nthresh)
+    BwFDR <- rep(0, nthresh)
     for (j in 1:nthresh) {
         idx <- rej_prob >= thresh[j]
         if (sum(idx) > 0) {
-            BFCR[j] <- 1 - sum(weighted_rej[idx]) / sum(cluster_size_vec[idx])
+            BwFDR[j] <- 1 - sum(weighted_rej[idx]) / sum(cluster_size_vec[idx])
         }
     }
-    level <- min(thresh[BFCR < alpha])
-    reject <- rej_prob >= thresh[which(BFCR < alpha)[1]]
+    
+    reject <- rej_prob >= thresh[which(BwFDR < alpha)[1]]
     reject_list <- split(reject, cluster_size_vec) %>% `names<-` (names(theta_list))
     
-    list(
-        level = level,
-        reject_list = map(reject_list, unname),
-        thresh = thresh,
-        BFCR = BFCR
-    )
+    reject_list
+    
+    #    level <- min(thresh[BwFDR < alpha])
+    #    list(
+    #        level = level,
+    #        reject_list = map(reject_list, unname),
+    #        thresh = thresh,
+    #        BwFDR = BwFDR
+    #    )
+}
+
+
+wFDX <- function(theta_list,
+                 alpha = .1,
+                 beta = .9,
+                 nthresh = 100) {
+    # reject constructed such that P(mean(theta[reject]) < alpha) < beta
+    
+    rej_prob_list <- map(theta_list, rowMeans)
+    
+    cluster_sizes <- # Area of the scanning windows
+        (as.numeric(names(theta_list))) ^ 2 / 4
+    cluster_size_vec <-
+        # expanding the cluster sizes for ease of computing denominator of BwFDR
+        map2(cluster_sizes, rej_prob_list, ~ rep(.x, times = length(.y))) %>%
+        unlist
+    
+    # the larger this value is, the higher the wFDX
+    weighted_rej <-
+        map2(cluster_sizes, rej_prob_list, ~ .x * .y) %>% unlist
+    rej_prob <- unlist(rej_prob_list)
+    
+    thresh <- seq(0, 1, length = nthresh)
+    BwFDX <- rep(0, nthresh)
+    for (j in 1:nthresh) {
+        xceeds <- rej_prob >= thresh[j]
+        if (sum(xceeds) > 1) {
+            BwFDX[j] <- mean(1 - sum(weighted_rej[xceeds]) / sum(cluster_size_vec[xceeds]) < alpha )
+        }
+    }
+    
+    level <- 1
+    if (sum(BwFDX > beta) > 0) {
+        level <- min(thresh[BwFDX > beta])
+    }
+    reject <- rej_prob > level
+    reject_list <- split(reject, cluster_size_vec) %>%
+        `names<-` (names(theta_list))
+    
+    reject_list
 }
