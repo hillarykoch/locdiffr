@@ -5,14 +5,14 @@ FDR <- function(theta,
     #   less than X * beta at location s?
     # reject constructed such that E(mean(theta[reject])) < alpha
     
-    rej_prob <- colMeans(theta)
+    rej_prob <- rowMeans(theta)
     thresh <- seq(0, 1, length = nthresh)
     
     # The Bayes FDR at each threshold
     # (want to find one that is closest to and not greater than choice of alpha)
-    BFDR <- rep(0, nthresh)
+    BFDR <- rep(0, max(rej_prob))
     for (j in 1:nthresh) {
-        if (sum(rej_prob >= thresh[j]) > 0) {
+        if (any(rej_prob >= thresh[j])) {
             BFDR[j] <- 1 - mean(rej_prob[rej_prob >= thresh[j]])
         }
     }
@@ -29,26 +29,26 @@ FDR <- function(theta,
 
 FDX <- function(theta,
                 alpha = .1,
-                beta = .9,
+                beta = .5,
                 nthresh = 100) {
-    # reject constructed such that P(mean(theta[reject]) < alpha) < beta
-    
-    rej_prob <- colMeans(theta)
+    # reject constructed such that P(mean(theta[reject]) > beta) <= alpha
+    rej_prob <- rowMeans(theta)
     thresh <- seq(0, max(rej_prob), length = nthresh)
     BFDX <- rep(0, nthresh)
     for (j in 1:nthresh) {
         xceeds <- rej_prob >= thresh[j]
         if (sum(xceeds) > 1) {
-            BFDX[j] <- mean(1 - rowMeans(theta[, xceeds]) < alpha)
+            BFDX[j] <- mean( 1 - rowMeans(theta[xceeds,]) > beta)
         }
     }
     
-    # The level is the minimum value such that the BFDX exceeds bound beta
+    # The level is the minimum value such that the BFDX is less than alpha
     level <- 1
-    if (sum(BFDX > beta) > 0) {
-        level <- min(thresh[BFDX > beta])
+    if (any(BFDX <= alpha)) {
+        level <- min(thresh[BFDX <= alpha])
     }
-    reject <- rej_prob > level
+    
+    reject <- rej_prob >= level
     list(
         level = level,
         reject = reject,
@@ -56,6 +56,7 @@ FDX <- function(theta,
         BFDX = BFDX
     )
 }
+
 
 wFDR <- function(theta_list,
                  alpha = 0.1,
@@ -73,37 +74,28 @@ wFDR <- function(theta_list,
     weighted_rej <-
         map2(cluster_sizes, rej_prob_list, ~ .x * .y) %>% unlist
     rej_prob <- unlist(rej_prob_list)
-    thresh <- seq(0, 1, length = nthresh)
+    thresh <- seq(0, max(rej_prob), length = nthresh)
     
     BwFDR <- rep(0, nthresh)
     for (j in 1:nthresh) {
         idx <- rej_prob >= thresh[j]
-        if (sum(idx) > 0) {
+        if (any(idx)) {
             BwFDR[j] <- 1 - sum(weighted_rej[idx]) / sum(cluster_size_vec[idx])
         }
     }
     
-    reject <- rej_prob >= thresh[which(BwFDR < alpha)[1]]
+    reject <- rej_prob >= thresh[which(BwFDR <= alpha)[1]]
     reject_list <- split(reject, cluster_size_vec) %>% `names<-` (names(theta_list))
     
     reject_list
-    
-    #    level <- min(thresh[BwFDR < alpha])
-    #    list(
-    #        level = level,
-    #        reject_list = map(reject_list, unname),
-    #        thresh = thresh,
-    #        BwFDR = BwFDR
-    #    )
 }
 
 
 wFDX <- function(theta_list,
                  alpha = .1,
-                 beta = .9,
-                 nthresh = 100) {
-    # reject constructed such that P(mean(theta[reject]) < alpha) < beta
-    
+                 beta = .1,
+                 nthresh = 100,
+                 bootstrap_replicates = 1000) {
     rej_prob_list <- map(theta_list, rowMeans)
     
     cluster_sizes <- # Area of the scanning windows
@@ -118,22 +110,34 @@ wFDX <- function(theta_list,
         map2(cluster_sizes, rej_prob_list, ~ .x * .y) %>% unlist
     rej_prob <- unlist(rej_prob_list)
     
-    thresh <- seq(0, 1, length = nthresh)
+    thresh <- seq(0, max(rej_prob), length = nthresh)
     BwFDX <- rep(0, nthresh)
     for (j in 1:nthresh) {
         xceeds <- rej_prob >= thresh[j]
         if (sum(xceeds) > 1) {
-            BwFDX[j] <- mean(1 - sum(weighted_rej[xceeds]) / sum(cluster_size_vec[xceeds]) < alpha )
+            
+            boot <- rep(NA, bootstrap_replicates)
+            nsamp <- round(sum(xceeds) / 100)
+            for(b in seq(bootstrap_replicates)) {
+                samp <- sample(which(xceeds), nsamp, replace = TRUE)
+                boot[b] <- 1-sum(weighted_rej[samp]) / sum(cluster_size_vec[samp])
+            }
+            
+            
+            BwFDX[j] <- mean(boot > beta)
         }
     }
     
     level <- 1
-    if (sum(BwFDX > beta) > 0) {
-        level <- min(thresh[BwFDX > beta])
+    if(any(BwFDX <= alpha)) {
+        level <- min(thresh[BwFDX <= alpha])
     }
-    reject <- rej_prob > level
+    
+    
+    reject <- rej_prob >= level
     reject_list <- split(reject, cluster_size_vec) %>%
         `names<-` (names(theta_list))
     
     reject_list
+    
 }
