@@ -1,0 +1,73 @@
+---
+title: "sgp"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{sgp}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, echo = FALSE, message = FALSE, message = FALSE, warning = FALSE}
+library(sgp)
+```
+
+# In progress...
+
+We will run a preliminary analysis with some toy Hi-C data. There are two replicates each from two conditions. If you have more replicates, or differing numbers of replicates from each condition, that's okay. The package will automatically select which replicates to retain based on sequencing depth.
+
+To begin the analysis, you need file paths to all of the data, split into two groups. The data should be in the following tab-delimited format:
+
+| Loc1 | Loc2   | Counts |
+|------|--------|--------|
+| 0    | 0      | 100    |
+| 0    | 50000  | 88     |
+| 0    | 100000 | 40     |
+
+Here, Loc1 is the start of the first bin, Loc2 the start of the second bin, and counts indicating the read counts for the interactions between those 2 bins. The value in Loc1 should always be less than or equal to the value in Loc2.
+
+Let's prepare the data pre-loaded into this package. We can see that there are 4 datasets -- two from a knockout group and two from a parent group. These data are already in the correct format.
+
+```{r}
+# locate the data
+all_data <- list.files(system.file("extdata", package = "sgp"))
+print(all_data)
+```
+
+
+Once we have defined file paths to two groups, the rest of the analysis is straightforward and proceeds as follows:
+
+```{r, cache = TRUE, message = FALSE, warning = FALSE, results = "hide"}
+# Define paths to data from 2 conditions
+ko_data <-
+    system.file("extdata", all_data[grepl(pattern = "KO", x = all_data)], package = "sgp")
+parent_data <-
+    system.file("extdata", all_data[grepl(pattern = "parent", x = all_data)], package = "sgp")
+
+# Compute the SCC scan statistics
+run_scc_scan(
+    infiles1 = ko_data,
+    infiles2 = parent_data,
+    outpath = "../inst/extdata/output/z.rds",
+    resolution = 40000,
+    winsizes = c(20, 30),
+    parallel = FALSE,
+    offset = TRUE
+)
+
+# Fit the nearest-neighbor Gaussian process model via MCMC
+fit_nngp(infile = "../inst/extdata/output/z.rds", outpath = "../inst/extdata/output/fit.rds", num_neighbors = 5, iters = 250, parallel = FALSE)
+
+# Use posterior samples to make new draws from the nearest-neighbor Gaussian process, for hypothesis testing
+sample_new_nngps("../inst/extdata/output/z.rds", mcmc_fit_file = "../inst/extdata/output/fit.rds", outpath = "../inst/extdata/output/pred.rds", stationary_iterations = 151:250, parallel = FALSE)
+
+```
+
+
+

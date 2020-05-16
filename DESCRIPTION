@@ -25,3 +25,7 @@ LinkingTo:
     BH
 SystemRequirements:
     C++11
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
