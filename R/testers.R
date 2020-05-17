@@ -76,20 +76,17 @@ wFDR <- function(theta_list,
     rej_prob <- unlist(rej_prob_list)
     thresh <- seq(0, max(rej_prob), length = nthresh)
 
-    BwFDR <- rep(0, nthresh)
-    for (j in 1:nthresh) {
-        idx <- rej_prob >= thresh[j]
-        if (any(idx)) {
-            BwFDR[j] <- 1 - sum(weighted_rej[idx]) / sum(cluster_size_vec[idx])
-        }
-    }
+    BwFDR <- ccompute_bwfdr(weighted_rej, rej_prob, thresh, cluster_size_vec)
 
-    reject <- rej_prob >= thresh[which(BwFDR <= alpha)[1]]
-    reject_list <- split(reject, cluster_size_vec) %>% `names<-` (names(theta_list))
+    if(any(BwFDR <= alpha)) {
+        reject <- rej_prob >= thresh[which(BwFDR <= alpha)[1]]
+    } else {
+        reject <- rep(FALSE, times = length(rej_prob))
+    }
+    reject_list <- split(unname(reject), cluster_size_vec) %>% `names<-` (names(theta_list))
 
     reject_list
 }
-
 
 wFDX <- function(theta_list,
                  alpha = .1,
@@ -110,23 +107,9 @@ wFDX <- function(theta_list,
         map2(cluster_sizes, rej_prob_list, ~ .x * .y) %>% unlist
     rej_prob <- unlist(rej_prob_list)
 
+
     thresh <- seq(0, max(rej_prob), length = nthresh)
-    BwFDX <- rep(0, nthresh)
-    for (j in 1:nthresh) {
-        xceeds <- rej_prob >= thresh[j]
-        if (sum(xceeds) > 1) {
-
-            boot <- rep(NA, bootstrap_replicates)
-            nsamp <- round(sum(xceeds) / 100)
-            for(b in seq(bootstrap_replicates)) {
-                samp <- sample(which(xceeds), nsamp, replace = TRUE)
-                boot[b] <- 1-sum(weighted_rej[samp]) / sum(cluster_size_vec[samp])
-            }
-
-
-            BwFDX[j] <- mean(boot > beta)
-        }
-    }
+    BwFDX <- ccompute_bwfdx(weighted_rej, rej_prob, thresh, cluster_size_vec, bootstrap_replicates, beta)
 
     level <- 1
     if(any(BwFDX <= alpha)) {
@@ -135,7 +118,7 @@ wFDX <- function(theta_list,
 
 
     reject <- rej_prob >= level
-    reject_list <- split(reject, cluster_size_vec) %>%
+    reject_list <- split(unname(reject), cluster_size_vec) %>%
         `names<-` (names(theta_list))
 
     reject_list

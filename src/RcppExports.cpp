@@ -282,6 +282,36 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ccompute_bwfdr
+arma::colvec ccompute_bwfdr(arma::colvec weighted_rej, arma::colvec rej_prob, arma::colvec thresh, arma::colvec cluster_size_vec);
+RcppExport SEXP _sgp_ccompute_bwfdr(SEXP weighted_rejSEXP, SEXP rej_probSEXP, SEXP threshSEXP, SEXP cluster_size_vecSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::colvec >::type weighted_rej(weighted_rejSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type rej_prob(rej_probSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type thresh(threshSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type cluster_size_vec(cluster_size_vecSEXP);
+    rcpp_result_gen = Rcpp::wrap(ccompute_bwfdr(weighted_rej, rej_prob, thresh, cluster_size_vec));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ccompute_bwfdx
+arma::colvec ccompute_bwfdx(arma::colvec weighted_rej, arma::colvec rej_prob, arma::colvec thresh, arma::colvec cluster_size_vec, int bootstrap_replicates, double beta);
+RcppExport SEXP _sgp_ccompute_bwfdx(SEXP weighted_rejSEXP, SEXP rej_probSEXP, SEXP threshSEXP, SEXP cluster_size_vecSEXP, SEXP bootstrap_replicatesSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::colvec >::type weighted_rej(weighted_rejSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type rej_prob(rej_probSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type thresh(threshSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type cluster_size_vec(cluster_size_vecSEXP);
+    Rcpp::traits::input_parameter< int >::type bootstrap_replicates(bootstrap_replicatesSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(ccompute_bwfdx(weighted_rej, rej_prob, thresh, cluster_size_vec, bootstrap_replicates, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_sgp_cinv", (DL_FUNC) &_sgp_cinv, 1},
@@ -305,6 +335,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sgp_csparse_quadratic_form_symm_2d", (DL_FUNC) &_sgp_csparse_quadratic_form_symm_2d, 4},
     {"_sgp_csparse_quadratic_form_asymm_2d", (DL_FUNC) &_sgp_csparse_quadratic_form_asymm_2d, 5},
     {"_sgp_csolve_for_B_and_b_2d", (DL_FUNC) &_sgp_csolve_for_B_and_b_2d, 6},
+    {"_sgp_ccompute_bwfdr", (DL_FUNC) &_sgp_ccompute_bwfdr, 4},
+    {"_sgp_ccompute_bwfdx", (DL_FUNC) &_sgp_ccompute_bwfdx, 6},
     {NULL, NULL, 0}
 };
 

@@ -85,3 +85,11 @@ csolve_for_B_and_b_2d <- function(y, X, A, D, neighbor_list, precision_beta) {
     .Call(`_sgp_csolve_for_B_and_b_2d`, y, X, A, D, neighbor_list, precision_beta)
 }
 
+ccompute_bwfdr <- function(weighted_rej, rej_prob, thresh, cluster_size_vec) {
+    .Call(`_sgp_ccompute_bwfdr`, weighted_rej, rej_prob, thresh, cluster_size_vec)
+}
+
+ccompute_bwfdx <- function(weighted_rej, rej_prob, thresh, cluster_size_vec, bootstrap_replicates, beta) {
+    .Call(`_sgp_ccompute_bwfdx`, weighted_rej, rej_prob, thresh, cluster_size_vec, bootstrap_replicates, beta)
+}
+
