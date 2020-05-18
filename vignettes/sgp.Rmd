@@ -65,9 +65,52 @@ run_scc_scan(
 fit_nngp(infile = "../inst/extdata/output/z.rds", outpath = "../inst/extdata/output/fit.rds", num_neighbors = 5, iters = 250, parallel = FALSE)
 
 # Use posterior samples to make new draws from the nearest-neighbor Gaussian process, for hypothesis testing
-sample_new_nngps("../inst/extdata/output/z.rds", mcmc_fit_file = "../inst/extdata/output/fit.rds", outpath = "../inst/extdata/output/pred.rds", stationary_iterations = 151:250, parallel = FALSE)
+sample_new_nngps(scc_scan_file = "../inst/extdata/output/z.rds", mcmc_fit_file = "../inst/extdata/output/fit.rds", outpath = "../inst/extdata/output/pred.rds", stationary_iterations = 151:250, parallel = FALSE)
 
 ```
 
+Results are used to test whether or not a region contains significantly differential interactions. To test, we need to compute $\theta^b(s_w):=\text{I}\big[Z^{b}(s_w) < \mu^b(s_w)\big]$, the indicator that the nearest-neighbor Gaussian process sampled at iteration $b$ at location $s_w$ is less than the mean process at iteration $b$ at the same location. To compute $\theta^b(s_w)$ for all locations $s_w, \, w\in\{1,\ldots W\}$ and all iterations $b, \, b \in \{1,\ldots,B\}$, we provide the function `compute_thetas`. 
+
+```{r}
+thetas <-
+    compute_thetas(
+    mcmc_fit_file =  "../inst/extdata/output/fit.rds",
+    sampled_nngps_file = "../inst/extdata/output/pred.rds",
+    outpath = "../inst/extdata/output/thetas.rds"
+    )
+```
+
+Output from `compute_thetas` is used to test for significantly differential regions based on either the weighted false discovery rate or weighted false discovery exceedance criteria:
+
+```{r}
+# Compute rejections based on weighted false discovery rate
+test_by_wFDR(
+    scc_scan_file = "../inst/extdata/output/z.rds",
+    thetas_file = "../inst/extdata/output/thetas.rds",
+    outpath = "../inst/extdata/output/wfdr.rds",
+    alpha = 0.2
+    )
+
+# Compute rejections based on weighted false discovery exceedence
+test_by_wFDX(
+    scc_scan_file = "../inst/extdata/output/z.rds",
+    thetas_file = "../inst/extdata/output/thetas.rds",
+    outpath = "../inst/extdata/output/wfdx.rds",
+    alpha = 0.2,
+    beta = 0.2
+    )
+
+```
+
+You can easily view the output of the transformed SCC scan, verify that the model fitting is proceeding as expected, and check rejection locations with `plot_rejections_along_process`. In the below plot, z1 and z2 are the observed data. z_star is the average over all of the newly sampled nearest-neighbor Gaussian processes, which we expect to typically take values which are pointwise averages of the observed processes. The mean function is the average mean function across all MCMC iterations. Rejections based on the wFDR and wFDX criteria are marked along the process.
+
+```{r, fig.width = 6, fig.height = 6}
+p <- plot_rejections_along_process(scc_scan_file = "../inst/extdata/output/z.rds",
+             mcmc_fit_file =  "../inst/extdata/output/fit.rds",
+             sampled_nngps_file = "../inst/extdata/output/pred.rds",
+             rejection_files = c("../inst/extdata/output/wfdr.rds", "../inst/extdata/output/wfdx.rds"),
+             rejection_names = c("wFDR", "wFDX"))
+cowplot::plot_grid(plotlist = p, nrow = 2, ncol = 1)
+```
 
 

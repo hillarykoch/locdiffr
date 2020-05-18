@@ -90,9 +90,9 @@ wFDR <- function(theta_list,
 
 wFDX <- function(theta_list,
                  alpha = .1,
-                 beta = .1,
+                 beta,
                  nthresh = 100,
-                 bootstrap_replicates = 1000) {
+                 bootstrap_replicates = 500) {
     rej_prob_list <- map(theta_list, rowMeans)
 
     cluster_sizes <- # Area of the scanning windows

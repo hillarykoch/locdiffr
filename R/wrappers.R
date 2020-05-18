@@ -10,7 +10,8 @@ run_scc_scan <-
              winsizes = seq(10, 100, by = 10),
              parallel = FALSE,
              ncores = 10,
-             offset = TRUE) {
+             offset = TRUE,
+             return = FALSE) {
         # cond1, cond2: list of paths to data from condition 1/condition 2 in BED-type format: LOC1, LOC2, COUNTS
         #   If different numbers of replicates, the function will automatically choose which to keep based on sequencing depth
         # outpath: where to write the output file
@@ -149,6 +150,10 @@ run_scc_scan <-
         names(zs) <- winsizes
 
         saveRDS(zs, file = outpath)
+
+        if(return) {
+            return(zs)
+        }
     }
 
 fit_nngp <-
@@ -157,7 +162,8 @@ fit_nngp <-
              num_neighbors = 15,
              iters = 15000,
              parallel = FALSE,
-             ncores = 10) {
+             ncores = 10,
+             return = FALSE) {
         # infile: path to .rds file output from run_scc_scan
         # outpath: where to write results
         # num_neighbors: how many neighbors to use for mcmc?
@@ -238,6 +244,10 @@ fit_nngp <-
 
         names(fits) <- winsizes
         saveRDS(fits, file = outpath)
+
+        if(return) {
+            return(fits)
+        }
     }
 
 sample_new_nngps <-
@@ -246,7 +256,8 @@ sample_new_nngps <-
              outpath,
              stationary_iterations,
              parallel = FALSE,
-             ncores = 10) {
+             ncores = 10,
+             return = FALSE) {
         # scc_scan_file: path to rds file output from run_scc_scan
         # mcmc_fit_file: path to rds file output from fit_nngp
         # outpath: where to save newly sampled nngps
@@ -303,4 +314,117 @@ sample_new_nngps <-
         preds$stationary_iterations <- stationary_iterations
 
         saveRDS(preds, file = outpath)
+
+        if(return) {
+            return(preds)
+        }
     }
+
+
+compute_thetas <-
+    function(mcmc_fit_file,
+             sampled_nngps_file,
+             outpath,
+             return = FALSE) {
+        # mcmc_fit_file: path to rds file output from fit_nngp
+        # sampled_nngps_file: path to rds file output from sample_new_nngps
+        # outpath: where to save newly computed theta indicators
+
+        #-------------------------------------------------------------------------------
+        # Compute theta (indicator that "prediction" was below mean process)
+        #-------------------------------------------------------------------------------
+        fits <- readRDS(mcmc_fit_file)
+        preds <- readRDS(sampled_nngps_file)
+
+        thetas <- list()
+
+        for (i in seq_along(fits)) {
+            X <- fits[[i]]$X
+            stationary_beta <- fits[[i]]$chain$beta[preds$stationary_iterations, ]
+            mean_process <- X %*% t(stationary_beta)
+
+            thetas[[i]] <- preds[[i]] < mean_process
+        }
+
+        names(thetas) <- names(fits)
+
+        saveRDS(thetas, file = outpath)
+
+        if(return) {
+            return(thetas)
+        }
+    }
+
+# wFDR and wFDX, with matching to tested loci
+test_by_wFDR <-
+    function(scc_scan_file,
+             thetas_file,
+             outpath,
+             alpha = .05,
+             nthresh = 100,
+             return = FALSE) {
+
+    # scc_scan_file: path to rds file output from run_scc_scan
+    # thetas_file: path to rds file output from compute_thetas
+    # outpath: where to save wFDR testing info
+    # alpha: confidence level in [0,1]
+    # nthresh: number of thresholds used to compute wFDR
+
+    z <- readRDS(scc_scan_file)
+    theta_list <- readRDS(thetas_file)
+
+    wfdr <- wFDR(theta_list = theta_list, alpha = alpha, nthresh = nthresh)
+    crd <- purrr::map(z, ~ .x[[1]]$crd)
+
+    rej <- purrr::map2(crd, wfdr, ~ tidyr::tibble("crd" = .x, "reject" = .y))
+
+
+    saveRDS(rej, outpath)
+
+    if(return) {
+        return(rej)
+    }
+}
+
+
+test_by_wFDX <-
+    function(scc_scan_file,
+             thetas_file,
+             outpath,
+             alpha,
+             beta = .5,
+             nthresh = 100,
+             bootstrap_replicates = 500,
+             return = FALSE
+    ) {
+    # scc_scan_file: path to rds file output from run_scc_scan
+    # thetas_file: path to rds file output from compute_thetas
+    # outpath: where to save wFDR testing info
+    # alpha: confidence level in [0,1]
+    # beta: wFDX = P(FDR > beta) < alpha
+    # nthresh: number of thresholds used to compute wFDX
+    # bootstrap_replicates: number of bootstrap replicates used to approximate the probability of exceedance
+
+    z <- readRDS(scc_scan_file)
+    theta_list <- readRDS(thetas_file)
+
+    wfdx <-
+        wFDX(
+            theta_list = theta_list,
+            alpha = alpha,
+            beta = beta,
+            nthresh = nthresh,
+            bootstrap_replicates = bootstrap_replicates
+        )
+    crd <- purrr::map(z, ~ .x[[1]]$crd)
+
+    rej <- purrr::map2(crd, wfdx, ~ tidyr::tibble("crd" = .x, "reject" = .y))
+
+    saveRDS(rej, outpath)
+
+    if(return) {
+        return(rej)
+    }
+}
+
+

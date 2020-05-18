@@ -52,7 +52,7 @@ arma::colvec ccompute_bwfdx(arma::colvec weighted_rej,
         xceeds = find(rej_prob >= thresh[j]);
 
         if(xceeds.size() > 1) {
-            nsamp = round(xceeds.size() / 100);
+            nsamp = xceeds.size();
 
             for(auto b = 0; b < bootstrap_replicates; b++) {
                 samp = RcppArmadillo::sample(xceeds, nsamp, true);
