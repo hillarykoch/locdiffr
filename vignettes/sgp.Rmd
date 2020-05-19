@@ -56,7 +56,7 @@ run_scc_scan(
     infiles2 = parent_data,
     outpath = "../inst/extdata/output/z.rds",
     resolution = 40000,
-    winsizes = c(20, 30),
+    winsizes = c(10, 25),
     parallel = FALSE,
     offset = TRUE
 )
@@ -88,7 +88,7 @@ test_by_wFDR(
     scc_scan_file = "../inst/extdata/output/z.rds",
     thetas_file = "../inst/extdata/output/thetas.rds",
     outpath = "../inst/extdata/output/wfdr.rds",
-    alpha = 0.2
+    alpha = 0.1
     )
 
 # Compute rejections based on weighted false discovery exceedence
@@ -96,13 +96,39 @@ test_by_wFDX(
     scc_scan_file = "../inst/extdata/output/z.rds",
     thetas_file = "../inst/extdata/output/thetas.rds",
     outpath = "../inst/extdata/output/wfdx.rds",
-    alpha = 0.2,
-    beta = 0.2
+    alpha = 0.1,
+    beta = 0.25
     )
 
 ```
 
-You can easily view the output of the transformed SCC scan, verify that the model fitting is proceeding as expected, and check rejection locations with `plot_rejections_along_process`. In the below plot, z1 and z2 are the observed data. z_star is the average over all of the newly sampled nearest-neighbor Gaussian processes, which we expect to typically take values which are pointwise averages of the observed processes. The mean function is the average mean function across all MCMC iterations. Rejections based on the wFDR and wFDX criteria are marked along the process.
+You can easily view the data and the output of the transformed SCC scan, verify that the model fitting is proceeding as expected, and check rejection locations with `plot_cond_vs_cont` and `plot_rejections_along_process`.
+
+`plot_cond_vs_cond` shows a Hi-C heatmap, where each half of the plotted heatmap shows data from a given condition. You can specify the `sub_range` argument to zoom in on a given region. NOTE: This function downsamples the datasets to equal reads from each condition so that comparisons are happening on the same scale.   
+
+```{r, message = FALSE, warning = FALSE, fig.width=8, fig.height=4}
+cond_vs_cond <-
+    plot_cond_vs_cond(
+    infiles1 = ko_data,
+    infiles2 = parent_data,
+    resolution = 40000,
+    condition_names = c("knockout", "parent")
+    )
+
+
+cond_vs_cond_zoom <- plot_cond_vs_cond(
+    infiles1 = ko_data,
+    infiles2 = parent_data,
+    resolution = 40000,
+    condition_names = c("knockout", "parent"),
+    sub_range = c(4800000, 10000000)
+    )
+
+cowplot::plot_grid(cond_vs_cond, cond_vs_cond_zoom, nrow = 1, ncol = 2)
+
+```
+
+`plot_rejections_along_process` shows the transformed SCC scan statistic with rejected loci marked. In the below plot, z1 and z2 are the observed data. z_star is the average over all of the newly sampled nearest-neighbor Gaussian processes, which we expect to typically take values which are pointwise averages of the observed processes. The mean function is the average mean function across all MCMC iterations. Rejections based on the wFDR and wFDX criteria are marked along the process.
 
 ```{r, fig.width = 6, fig.height = 6}
 p <- plot_rejections_along_process(scc_scan_file = "../inst/extdata/output/z.rds",
@@ -113,4 +139,28 @@ p <- plot_rejections_along_process(scc_scan_file = "../inst/extdata/output/z.rds
 cowplot::plot_grid(plotlist = p, nrow = 2, ncol = 1)
 ```
 
+Likewise, you can see where these rejections fall along the Hi-C contact matrix with `plot_rej_vs_diffs`. This function will plot the absolute differences between pooled replicates from both conditions against the rejected regions. Like with the `plot_cond_vs_cond` function, you can use the `sub_range` argument to zoom in on a given location.
+
+```{r, message = FALSE, warning = FALSE, fig.width=8, fig.height=4}
+
+diff_v_rej <- plot_rej_vs_diffs(
+    infiles1 = ko_data,
+    infiles2 = parent_data,
+    rejections_file = "../inst/extdata/output/wfdr.rds",
+    resolution = 40000,
+    condition_names = c("knockout", "parent")
+    )
+    
+diff_v_rej_zoom <- plot_rej_vs_diffs(
+    infiles1 = ko_data,
+    infiles2 = parent_data,
+    rejections_file = "../inst/extdata/output/wfdr.rds",
+    resolution = 40000,
+    condition_names = c("knockout", "parent"),
+    sub_range = c(4800000, 10000000)
+    )
+
+cowplot::plot_grid(diff_v_rej, diff_v_rej_zoom, nrow = 1, ncol = 2)
+
+```
 
