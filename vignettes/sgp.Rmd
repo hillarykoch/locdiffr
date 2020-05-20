@@ -97,7 +97,7 @@ test_by_wFDX(
     thetas_file = "../inst/extdata/output/thetas.rds",
     outpath = "../inst/extdata/output/wfdx.rds",
     alpha = 0.1,
-    beta = 0.25
+    beta = 0.1
     )
 
 ```

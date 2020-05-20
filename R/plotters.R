@@ -154,7 +154,7 @@ plot_cond_vs_cond <-
     df <- bind_rows(m1, m2)
 
     p <- ggplot(data = df, aes(x = Var1, y = Var2, fill = log2(value + 1))) +
-        geom_raster() +
+        geom_tile() +
         scale_fill_gradient(low = "white", high = "red", na.value = "white") +
         labs(x = condition_names[1], y = condition_names[2]) +
         theme_minimal() +
@@ -276,7 +276,7 @@ plot_rej_vs_diffs <-
                 y = Var2,
                 fill = value
             )) +
-                geom_raster() +
+                geom_tile() +
                 scale_fill_distiller(limits = c(0,1), palette = "Greys", direction = 1) +
                 ggnewscale::new_scale("fill") +
                 geom_tile(
