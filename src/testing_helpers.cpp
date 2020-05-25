@@ -20,7 +20,7 @@ arma::colvec ccompute_bwfdr(arma::colvec weighted_rej,
     arma::colvec bwfdr(nthresh, arma::fill::none);
 
     for(auto j = 0; j < nthresh; j++) {
-        idx = find(rej_prob >= thresh[j]);
+        idx = find(rej_prob > thresh[j]);
 
         bwfdr[j] = 1 - accu(weighted_rej.elem(idx)) / accu(cluster_size_vec.elem(idx));
     }
@@ -49,7 +49,7 @@ arma::colvec ccompute_bwfdx(arma::colvec weighted_rej,
 
 
     for(auto j = 0; j < nthresh; j++) {
-        xceeds = find(rej_prob >= thresh[j]);
+        xceeds = find(rej_prob > thresh[j]);
 
         if(xceeds.size() > 1) {
             nsamp = xceeds.size();
