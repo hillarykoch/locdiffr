@@ -257,6 +257,7 @@ sample_new_nngps <-
              stationary_iterations,
              parallel = FALSE,
              ncores = 10,
+             BOOT = 500,
              return = FALSE) {
         # scc_scan_file: path to rds file output from run_scc_scan
         # mcmc_fit_file: path to rds file output from fit_nngp
@@ -264,6 +265,7 @@ sample_new_nngps <-
         # stationary_iterations: which iterations to draw new processes from
         # parallel: do the scan in parallel?
         # ncores: how many cores to use, if parallel
+        # BOOT: number of bootstrap replicates for approximating wFDX
 
         #-------------------------------------------------------------------------------
         # Read in sgp output
@@ -291,7 +293,7 @@ sample_new_nngps <-
                         as.matrix
                     X <- fits[[i]]$X
 
-                    make_pred_sparse(fits[[i]]$chain, y, s, X, stationary_iterations)
+                    make_pred_sparse(fits[[i]]$chain, y, s, X, stationary_iterations, BOOT)
                 }
 
             stopCluster(cluster)
@@ -306,72 +308,55 @@ sample_new_nngps <-
                 X <- fits[[i]]$X
 
                 preds[[i]] <-
-                    make_pred_sparse(fits[[i]]$chain, y, s, X, stationary_iterations)
+                    make_pred_sparse(fits[[i]]$chain, y, s, X, stationary_iterations, BOOT) %>%
+                    purrr::array_branch(margin = 3)
             }
         }
 
         names(preds) <- winsizes
         preds$stationary_iterations <- stationary_iterations
 
-        saveRDS(preds, file = outpath)
-
-        if(return) {
-            return(preds)
-        }
-    }
-
-
-compute_thetas <-
-    function(mcmc_fit_file,
-             sampled_nngps_file,
-             outpath,
-             return = FALSE) {
-        # mcmc_fit_file: path to rds file output from fit_nngp
-        # sampled_nngps_file: path to rds file output from sample_new_nngps
-        # outpath: where to save newly computed theta indicators
-
         #-------------------------------------------------------------------------------
         # Compute theta (indicator that "prediction" was below mean process)
         #-------------------------------------------------------------------------------
-        fits <- readRDS(mcmc_fit_file)
-        preds <- readRDS(sampled_nngps_file)
-
         thetas <- list()
-
         for (i in seq_along(fits)) {
             X <- fits[[i]]$X
             stationary_beta <- fits[[i]]$chain$beta[preds$stationary_iterations, ]
             mean_process <- X %*% t(stationary_beta)
 
-            thetas[[i]] <- preds[[i]] < mean_process
+            thetas[[i]] <- map(preds[[i]], ~ rowMeans(.x < mean_process))
         }
-
         names(thetas) <- names(fits)
 
-        saveRDS(thetas, file = outpath)
+        pred_out <- map(preds, 1)
+        pred_out$stationary_iterations <- stationary_iterations
+        out <- list("predictions" = pred_out, "bootstrapped_thetas" = thetas)
 
+        saveRDS(out, file = outpath)
         if(return) {
-            return(thetas)
+            return(out)
         }
     }
+
 
 # wFDR and wFDX, with matching to tested loci
 test_by_wFDR <-
     function(scc_scan_file,
-             thetas_file,
+             sampled_nngps_file,
              outpath,
              alpha = .01,
              nthresh = 100,
              return = FALSE) {
-
         # scc_scan_file: path to rds file output from run_scc_scan
-        # thetas_file: path to rds file output from compute_thetas
+        # sampled_nngps_file: path to rds file output from sample_new_nngps, which
+        #   contains predictions and bootstrapped thetas
         # outpath: where to save wFDR testing info
         # alpha: confidence level in [0,1]
         # nthresh: number of thresholds used to compute wFDR
 
         z <- readRDS(scc_scan_file)
-        theta_list <- readRDS(thetas_file)
+        theta_list <- readRDS(sampled_nngps_file)$bootstrapped_thetas
 
 
         # Try to remove edge effects
@@ -379,7 +364,7 @@ test_by_wFDR <-
 
         for(i in seq_along(z)) {
             if(any(z[[i]][[1]]$crd %in% rm_crd)) {
-                theta_list[[i]] <- theta_list[[i]][!(z[[i]][[1]]$crd %in% rm_crd),]
+                theta_list[[i]] <- map(theta_list[[i]], ~ .x[!(z[[i]][[1]]$crd %in% rm_crd)])
                 z[[i]] <- map(z[[i]], ~ dplyr::filter(.x, !(crd %in% rm_crd)))
             }
         }
@@ -401,12 +386,11 @@ test_by_wFDR <-
 
 test_by_wFDX <-
     function(scc_scan_file,
-             thetas_file,
+             sampled_nngps_file,
              outpath,
              alpha = .01,
              beta = .01,
              nthresh = 100,
-             bootstrap_replicates = 500,
              return = FALSE
     ) {
         # scc_scan_file: path to rds file output from run_scc_scan
@@ -418,14 +402,14 @@ test_by_wFDX <-
         # bootstrap_replicates: number of bootstrap replicates used to approximate the probability of exceedance
 
         z <- readRDS(scc_scan_file)
-        theta_list <- readRDS(thetas_file)
+        theta_list <- readRDS(sampled_nngps_file)$bootstrapped_thetas
 
         # Try to remove edge effects
         rm_crd <- 0:((map(z, 1) %>% map("crd") %>% map_int(min) %>% max)-1)
 
         for(i in seq_along(z)) {
             if(any(z[[i]][[1]]$crd %in% rm_crd)) {
-                theta_list[[i]] <- theta_list[[i]][!(z[[i]][[1]]$crd %in% rm_crd),]
+                theta_list[[i]] <- map(theta_list[[i]], ~ .x[!(z[[i]][[1]]$crd %in% rm_crd)])
                 z[[i]] <- map(z[[i]], ~ dplyr::filter(.x, !(crd %in% rm_crd)))
             }
         }
@@ -436,8 +420,7 @@ test_by_wFDX <-
                 theta_list = theta_list,
                 alpha = alpha,
                 beta = beta,
-                nthresh = nthresh,
-                bootstrap_replicates = bootstrap_replicates
+                nthresh = nthresh
             )
         crd <- purrr::map(z, ~ .x[[1]]$crd)
 

@@ -62,16 +62,17 @@ get_cor_sparse <- function(d, range = NULL, col_index) {
     d
 }
 
-make_pred_sparse <- function(fit, y, s, X, stationary_iterations){
-    stationary_beta <- fit$beta[stationary_iterations,]
+make_pred_sparse <- function(fit, y, s, X, stationary_iterations, BOOT){
+    # stationary_beta <- fit$beta[stationary_iterations,]
+    # Xb <- X %*% t(stationary_beta)
     stationary_covar <- fit$covar_params[stationary_iterations,]
-    Xb <- X %*% t(stationary_beta)
 
     np <- nrow(y)
     d <- fit$neighbor_info$d
     col_index <- fit$neighbor_info$neighbor_column_major_index
 
-    preds <- matrix(NA, nrow = nrow(y), ncol = length(stationary_iterations))
+    # preds <- matrix(NA, nrow = nrow(y), ncol = length(stationary_iterations))
+    preds <- array(NA, dim = c(nrow(y), length(stationary_iterations), BOOT))
     neighbor_list_mod <- purrr::map2(.x = fit$neighbor_info$neighbor_list,
                                      .y = seq_along(fit$neighbor_info$neighbor_list),
                                      ~ c(.x, .y))
@@ -81,13 +82,13 @@ make_pred_sparse <- function(fit, y, s, X, stationary_iterations){
                            range = stationary_covar[j, "range_s"],
                            col_index = col_index) *
             stationary_covar[j, "sigma"])
-        preds[,j] <- cmake_one_pred_sparse(neighbor_list_mod,
-                                           y,
-                                           s,
-                                           X,
-                                           # cond_covs[[j]],
-                                           cond_cov,
-                                           round(runif(1, 1, .Machine$integer.max)))
+        preds[, j, ] <- cmake_one_pred_sparse(neighbor_list_mod,
+                                              y,
+                                              s,
+                                              X,
+                                              cond_cov,
+                                              BOOT,
+                                              round(runif(1, 1, .Machine$integer.max)))
     }
     preds <- sweep(preds, 1, rowMeans(y), `+`)
     preds

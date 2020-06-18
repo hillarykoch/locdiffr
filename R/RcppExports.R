@@ -65,8 +65,8 @@ csolve_for_B_and_b <- function(y, X, A, D, neighbor_list, precision_beta) {
     .Call(`_sgp_csolve_for_B_and_b`, y, X, A, D, neighbor_list, precision_beta)
 }
 
-cmake_one_pred_sparse <- function(neighbor_list, y, s, X, cond_cov, SEED) {
-    .Call(`_sgp_cmake_one_pred_sparse`, neighbor_list, y, s, X, cond_cov, SEED)
+cmake_one_pred_sparse <- function(neighbor_list, y, s, X, cond_cov, BOOT, SEED) {
+    .Call(`_sgp_cmake_one_pred_sparse`, neighbor_list, y, s, X, cond_cov, BOOT, SEED)
 }
 
 csolve_for_A_and_D_2d <- function(cov_cur, neighbor_list) {
@@ -89,7 +89,7 @@ ccompute_bwfdr <- function(weighted_rej, rej_prob, thresh, cluster_size_vec) {
     .Call(`_sgp_ccompute_bwfdr`, weighted_rej, rej_prob, thresh, cluster_size_vec)
 }
 
-ccompute_bwfdx <- function(weighted_rej, rej_prob, thresh, cluster_size_vec, bootstrap_replicates, beta) {
-    .Call(`_sgp_ccompute_bwfdx`, weighted_rej, rej_prob, thresh, cluster_size_vec, bootstrap_replicates, beta)
+ccompute_bwfdx <- function(rej_prob, thresh, cluster_size_vec, beta, bootstrapped_theta_mat) {
+    .Call(`_sgp_ccompute_bwfdx`, rej_prob, thresh, cluster_size_vec, beta, bootstrapped_theta_mat)
 }
 

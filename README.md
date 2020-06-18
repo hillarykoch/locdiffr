@@ -24,7 +24,7 @@ Balázs Dezső, Alpár Jüttner, Péter Kovács. LEMON – an Open Source C++ Gr
 Sometimes package won't load if the correct shared objects aren't found. So, if
 
 ```r
-devtools::install_github("hillarykoch/sgp")
+devtools::install_github("hillarykoch/sgp", build_vignettes = TRUE)
 ```
 
 doesn't work, need to try

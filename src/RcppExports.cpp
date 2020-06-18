@@ -210,8 +210,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // cmake_one_pred_sparse
-arma::colvec cmake_one_pred_sparse(Rcpp::List& neighbor_list, arma::mat& y, arma::mat& s, arma::mat& X, arma::mat& cond_cov, unsigned int SEED);
-RcppExport SEXP _sgp_cmake_one_pred_sparse(SEXP neighbor_listSEXP, SEXP ySEXP, SEXP sSEXP, SEXP XSEXP, SEXP cond_covSEXP, SEXP SEEDSEXP) {
+arma::mat cmake_one_pred_sparse(Rcpp::List& neighbor_list, arma::mat& y, arma::mat& s, arma::mat& X, arma::mat& cond_cov, int BOOT, unsigned int SEED);
+RcppExport SEXP _sgp_cmake_one_pred_sparse(SEXP neighbor_listSEXP, SEXP ySEXP, SEXP sSEXP, SEXP XSEXP, SEXP cond_covSEXP, SEXP BOOTSEXP, SEXP SEEDSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -220,8 +220,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat& >::type s(sSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type cond_cov(cond_covSEXP);
+    Rcpp::traits::input_parameter< int >::type BOOT(BOOTSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type SEED(SEEDSEXP);
-    rcpp_result_gen = Rcpp::wrap(cmake_one_pred_sparse(neighbor_list, y, s, X, cond_cov, SEED));
+    rcpp_result_gen = Rcpp::wrap(cmake_one_pred_sparse(neighbor_list, y, s, X, cond_cov, BOOT, SEED));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -297,18 +298,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // ccompute_bwfdx
-arma::colvec ccompute_bwfdx(arma::colvec weighted_rej, arma::colvec rej_prob, arma::colvec thresh, arma::colvec cluster_size_vec, int bootstrap_replicates, double beta);
-RcppExport SEXP _sgp_ccompute_bwfdx(SEXP weighted_rejSEXP, SEXP rej_probSEXP, SEXP threshSEXP, SEXP cluster_size_vecSEXP, SEXP bootstrap_replicatesSEXP, SEXP betaSEXP) {
+arma::colvec ccompute_bwfdx(arma::colvec rej_prob, arma::colvec thresh, arma::colvec cluster_size_vec, double beta, arma::mat bootstrapped_theta_mat);
+RcppExport SEXP _sgp_ccompute_bwfdx(SEXP rej_probSEXP, SEXP threshSEXP, SEXP cluster_size_vecSEXP, SEXP betaSEXP, SEXP bootstrapped_theta_matSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::colvec >::type weighted_rej(weighted_rejSEXP);
     Rcpp::traits::input_parameter< arma::colvec >::type rej_prob(rej_probSEXP);
     Rcpp::traits::input_parameter< arma::colvec >::type thresh(threshSEXP);
     Rcpp::traits::input_parameter< arma::colvec >::type cluster_size_vec(cluster_size_vecSEXP);
-    Rcpp::traits::input_parameter< int >::type bootstrap_replicates(bootstrap_replicatesSEXP);
     Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(ccompute_bwfdx(weighted_rej, rej_prob, thresh, cluster_size_vec, bootstrap_replicates, beta));
+    Rcpp::traits::input_parameter< arma::mat >::type bootstrapped_theta_mat(bootstrapped_theta_matSEXP);
+    rcpp_result_gen = Rcpp::wrap(ccompute_bwfdx(rej_prob, thresh, cluster_size_vec, beta, bootstrapped_theta_mat));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -330,13 +330,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_sgp_csparse_quadratic_form_symm", (DL_FUNC) &_sgp_csparse_quadratic_form_symm, 4},
     {"_sgp_csparse_quadratic_form_asymm", (DL_FUNC) &_sgp_csparse_quadratic_form_asymm, 5},
     {"_sgp_csolve_for_B_and_b", (DL_FUNC) &_sgp_csolve_for_B_and_b, 6},
-    {"_sgp_cmake_one_pred_sparse", (DL_FUNC) &_sgp_cmake_one_pred_sparse, 6},
+    {"_sgp_cmake_one_pred_sparse", (DL_FUNC) &_sgp_cmake_one_pred_sparse, 7},
     {"_sgp_csolve_for_A_and_D_2d", (DL_FUNC) &_sgp_csolve_for_A_and_D_2d, 2},
     {"_sgp_csparse_quadratic_form_symm_2d", (DL_FUNC) &_sgp_csparse_quadratic_form_symm_2d, 4},
     {"_sgp_csparse_quadratic_form_asymm_2d", (DL_FUNC) &_sgp_csparse_quadratic_form_asymm_2d, 5},
     {"_sgp_csolve_for_B_and_b_2d", (DL_FUNC) &_sgp_csolve_for_B_and_b_2d, 6},
     {"_sgp_ccompute_bwfdr", (DL_FUNC) &_sgp_ccompute_bwfdr, 4},
-    {"_sgp_ccompute_bwfdx", (DL_FUNC) &_sgp_ccompute_bwfdx, 6},
+    {"_sgp_ccompute_bwfdx", (DL_FUNC) &_sgp_ccompute_bwfdx, 5},
     {NULL, NULL, 0}
 };
 

@@ -7,7 +7,7 @@ plot_rejections_along_process <-
              rejection_names = NULL) {
 
     z <- readRDS(scc_scan_file)
-    preds <- readRDS(sampled_nngps_file)
+    preds <- readRDS(sampled_nngps_file)$predictions
     fits <- readRDS(mcmc_fit_file)
 
     if(!is.null(rejection_names)) {

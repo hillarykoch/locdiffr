@@ -31,44 +31,35 @@ arma::colvec ccompute_bwfdr(arma::colvec weighted_rej,
 
 // For speeding up loop computing BwFDX at various thresholds
 // [[Rcpp::export]]
-arma::colvec ccompute_bwfdx(arma::colvec weighted_rej,
-                            arma::colvec rej_prob,
+arma::colvec ccompute_bwfdx(arma::colvec rej_prob,
                             arma::colvec thresh,
                             arma::colvec cluster_size_vec,
-                            int bootstrap_replicates,
-                            double beta) {
+                            double beta,
+                            arma::mat bootstrapped_theta_mat) { // W x BOOT matrix of prob(theta=1)
     int nthresh = thresh.size();
-    int nsamp;
     arma::uvec xceeds;
-    arma::colvec bwfdx(nthresh, arma::fill::ones);
-    arma::colvec boot(bootstrap_replicates, arma::fill::none);
+    arma::colvec bwfdx(nthresh, arma::fill::zeros);
 
-    arma::uvec samp;
+    int bootstrap_replicates = bootstrapped_theta_mat.n_cols;
+    arma::colvec boot(bootstrap_replicates, arma::fill::none);
+    arma::mat subm;
+
     arma::uvec compare_to_beta;
     arma::colvec dbl_compare;
-
 
     for(auto j = 0; j < nthresh; j++) {
         xceeds = find(rej_prob > thresh[j]);
 
-        if(xceeds.size() > 1) {
-            nsamp = xceeds.size();
-
-            for(auto b = 0; b < bootstrap_replicates; b++) {
-                samp = RcppArmadillo::sample(xceeds, nsamp, true);
-
-                boot[b] = 1 - accu(weighted_rej.elem(samp)) / accu(cluster_size_vec.elem(samp));
-            }
+        if(xceeds.size() >= 1) {
+            subm = bootstrapped_theta_mat.rows(xceeds);
+            boot = (1 - (sum(subm, 0) / accu(cluster_size_vec.elem(xceeds)))).t();
 
             compare_to_beta = boot > beta;
             dbl_compare = arma::conv_to<arma::colvec>::from(compare_to_beta);
             bwfdx[j] = mean(dbl_compare);
-
         }
     }
-
     return(bwfdx);
-
 }
 
 

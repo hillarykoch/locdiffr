@@ -109,33 +109,36 @@ Rcpp::List csolve_for_B_and_b(arma::mat& y,
 }
 
 // [[Rcpp::export]]
-arma::colvec cmake_one_pred_sparse(Rcpp::List& neighbor_list,
+arma::mat cmake_one_pred_sparse(Rcpp::List& neighbor_list,
                                 arma::mat& y,
                                 arma::mat& s,
                                 arma::mat& X,
                                 arma::mat& cond_cov,
+                                int BOOT,
                                 unsigned int SEED) {
     int n = y.n_rows;
-    arma::colvec preds(n, arma::fill::none);
-    arma::colvec z(n, arma::fill::none);
     arma::mat L;
 
-    arma::colvec uniform_rv;
-    uniform_rv = crunif(n, SEED);
+    arma::mat uniform_rv;
+    uniform_rv = arma::reshape(crunif(n * BOOT, SEED), n, BOOT);
+    arma::mat z(n, BOOT, arma::fill::none);
+    arma::mat preds(n, BOOT, arma::fill::none);
     normal standard_normal;
 
     for(auto i = 0; i < n; i++) {
-        z(i) = quantile(standard_normal, uniform_rv[i]);
+        for(auto j = 0; j < BOOT; j++) {
+            z(i,j) = quantile(standard_normal, uniform_rv(i,j));
+        }
     }
 
     arma::uvec Nidx;
     int sizen;
-    preds[0] = sqrt(cond_cov[0]) * z[0];
+    preds.row(0) = sqrt(cond_cov[0]) * z.row(0);
     for(auto i = 1; i < n; i++) {
         Nidx = as<arma::uvec>(neighbor_list[i]) - 1;
         sizen = Nidx.size()-1;
         L = arma::chol(cond_cov.cols(Nidx[0], Nidx[sizen]).rows(Nidx[0], Nidx[sizen]), "upper");
-        preds[i] = arma::dot(L.col(L.n_cols-1), z.subvec(Nidx[0], Nidx[sizen]));
+        preds.row(i) = L.col(L.n_cols-1).t() * (z.rows(Nidx[0], Nidx[sizen]));
     }
 
     return(preds);
