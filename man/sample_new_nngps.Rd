@@ -31,6 +31,9 @@ If parallel = TRUE, number of cores to parallelize over.
   \item{BOOT}{
   Number of bootstrap replicates to do.
   }
+  \item{nbatches}{
+    Numeric. Number of batches to use. This option will split the bootstrapping into batches to save memory but increase computation time.
+  }
   \item{return}{
 Logical. Should the output also be returned by the function?
 }
@@ -43,5 +46,5 @@ If return = TRUE, this function outputs a list of nearest-neighbor Gaussian proc
 }
 \examples{
 # Use posterior samples to make new draws from the nearest-neighbor Gaussian process, for hypothesis testing
-sample_new_nngps(scc_scan_file = "inst/extdata/output/z.rds", mcmc_fit_file = "inst/extdata/output/fit.rds", outpath = "inst/extdata/output/pred.rds", stationary_iterations = 101:150, parallel = FALSE, BOOT = 250)
+sample_new_nngps(scc_scan_file = "inst/extdata/output/z.rds", mcmc_fit_file = "inst/extdata/output/fit.rds", outpath = "inst/extdata/output/pred.rds", stationary_iterations = 101:150, parallel = FALSE, BOOT = 100, nbatches = 1)
 }

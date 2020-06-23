@@ -258,6 +258,7 @@ sample_new_nngps <-
              parallel = FALSE,
              ncores = 10,
              BOOT = 500,
+             nbatches = 1,
              return = FALSE) {
         # scc_scan_file: path to rds file output from run_scc_scan
         # mcmc_fit_file: path to rds file output from fit_nngp
@@ -279,64 +280,170 @@ sample_new_nngps <-
         iters <- nrow(fits[[1]]$chain$beta)
         winsizes <- as.numeric(names(zs))
 
-        if (parallel) {
-            cluster <- parallel::makeCluster(ncores)
-            doParallel::registerDoParallel(cluster)
-            parallel::clusterEvalQ(cluster, library(sgp))
-            parallel::clusterEvalQ(cluster, library(tidyverse))
+        #-------------------------------------------------------------------------------
+        # Handle batching for lower-memory analysis
+        #-------------------------------------------------------------------------------
+        if(nbatches > 1) {
+            BOOT <- round(BOOT / nbatches)
 
-            preds <-
-                foreach::foreach(i = seq_along(winsizes), .packages = "foreach") %dopar% {
+            for(batch in 1:nbatches) {
+                if (parallel) {
+                    cluster <- parallel::makeCluster(ncores)
+                    doParallel::registerDoParallel(cluster)
+                    parallel::clusterEvalQ(cluster, library(sgp))
+                    parallel::clusterEvalQ(cluster, library(tidyverse))
+
+                    preds <-
+                        foreach::foreach(i = seq_along(winsizes), .packages = "foreach") %dopar% {
+                            s <- matrix(zs[[i]]$z1$crd, ncol = 1)
+                            y <- map(zs[[i]], "z_s") %>%
+                                dplyr::bind_cols() %>%
+                                as.matrix
+                            X <- fits[[i]]$X
+
+                            make_pred_sparse(fits[[i]]$chain, y, s, X, stationary_iterations, BOOT) %>%
+                                purrr::array_branch(margin = 3)
+                        }
+
+                    parallel::stopCluster(cluster)
+                } else {
+                    preds <- list()
+
+                    for (i in seq_along(winsizes)) {
+                        s <- matrix(zs[[i]]$z1$crd, ncol = 1)
+                        y <- map(zs[[i]], "z_s") %>%
+                            dplyr::bind_cols() %>%
+                            as.matrix
+                        X <- fits[[i]]$X
+
+                        preds[[i]] <-
+                            make_pred_sparse(fits[[i]]$chain, y, s, X, stationary_iterations, BOOT) %>%
+                            purrr::array_branch(margin = 3)
+                    }
+                }
+
+                names(preds) <- winsizes
+                preds$stationary_iterations <- stationary_iterations
+
+                #-------------------------------------------------------------------------------
+                # Compute theta (indicator that "prediction" was below mean process)
+                #-------------------------------------------------------------------------------
+                thetas <- list()
+                for (i in seq_along(fits)) {
+                    X <- fits[[i]]$X
+                    stationary_beta <- fits[[i]]$chain$beta[preds$stationary_iterations, ]
+                    mean_process <- X %*% t(stationary_beta)
+
+                    thetas[[i]] <- purrr::map(preds[[i]], ~ rowMeans(.x < mean_process))
+                }
+                names(thetas) <- names(fits)
+
+                pred_out <- purrr::map(preds, 1)
+                pred_out$stationary_iterations <- stationary_iterations
+                out <- list("predictions" = pred_out, "bootstrapped_thetas" = thetas)
+
+                saveRDS(out, file = gsub(
+                    outpath,
+                    pattern = "\\.",
+                    replacement = paste0("_batch", batch, ".")
+                ))
+            }
+
+            #-------------------------------------------------------------------------------
+            # Combine batch files
+            #-------------------------------------------------------------------------------
+            # remove local garbage
+            rm(thetas)
+            rm(out)
+            rm(pred_out)
+            rm(preds)
+
+            # read in the batch files
+            batch_files <- list.files(path = dirname(gsub(
+                outpath,
+                pattern = "\\.[[:alpha:]]*", replacement = "")
+            ),
+            pattern = "batch", full.names = TRUE)
+            b <- purrr::map(batch_files, readRDS)
+
+            # merge everything into 1 list
+            all_thetas <- list()
+            for(winsize in seq_along(b[[1]]$bootstrapped_thetas)) {
+                all_thetas[[winsize]] <- Reduce(cbind, map(map(b, "bootstrapped_thetas"), winsize))
+                attributes(all_thetas[[winsize]]) <- NULL
+            }
+            names(all_thetas) <- names(b[[1]]$bootstrapped_thetas)
+            b <- b[[1]]
+            b$bootstrapped_thetas <- all_thetas
+
+            # clean up outpath
+            map(batch_files, ~ system(paste0("rm ", .x)))
+            saveRDS(object = b, file = outpath)
+
+            if(return) {
+                return(b)
+            }
+        } else {
+            if (parallel) {
+                cluster <- parallel::makeCluster(ncores)
+                doParallel::registerDoParallel(cluster)
+                parallel::clusterEvalQ(cluster, library(sgp))
+                parallel::clusterEvalQ(cluster, library(tidyverse))
+
+                preds <-
+                    foreach::foreach(i = seq_along(winsizes), .packages = "foreach") %dopar% {
+                        s <- matrix(zs[[i]]$z1$crd, ncol = 1)
+                        y <- map(zs[[i]], "z_s") %>%
+                            dplyr::bind_cols() %>%
+                            as.matrix
+                        X <- fits[[i]]$X
+
+                        make_pred_sparse(fits[[i]]$chain, y, s, X, stationary_iterations, BOOT) %>%
+                            purrr::array_branch(margin = 3)
+                    }
+
+                parallel::stopCluster(cluster)
+            } else {
+                preds <- list()
+
+                for (i in seq_along(winsizes)) {
                     s <- matrix(zs[[i]]$z1$crd, ncol = 1)
                     y <- map(zs[[i]], "z_s") %>%
                         dplyr::bind_cols() %>%
                         as.matrix
                     X <- fits[[i]]$X
 
-                    make_pred_sparse(fits[[i]]$chain, y, s, X, stationary_iterations, BOOT) %>%
+                    preds[[i]] <-
+                        make_pred_sparse(fits[[i]]$chain, y, s, X, stationary_iterations, BOOT) %>%
                         purrr::array_branch(margin = 3)
                 }
-
-            parallel::stopCluster(cluster)
-        } else {
-            preds <- list()
-
-            for (i in seq_along(winsizes)) {
-                s <- matrix(zs[[i]]$z1$crd, ncol = 1)
-                y <- map(zs[[i]], "z_s") %>%
-                    dplyr::bind_cols() %>%
-                    as.matrix
-                X <- fits[[i]]$X
-
-                preds[[i]] <-
-                    make_pred_sparse(fits[[i]]$chain, y, s, X, stationary_iterations, BOOT) %>%
-                    purrr::array_branch(margin = 3)
             }
-        }
 
-        names(preds) <- winsizes
-        preds$stationary_iterations <- stationary_iterations
+            names(preds) <- winsizes
+            preds$stationary_iterations <- stationary_iterations
 
-        #-------------------------------------------------------------------------------
-        # Compute theta (indicator that "prediction" was below mean process)
-        #-------------------------------------------------------------------------------
-        thetas <- list()
-        for (i in seq_along(fits)) {
-            X <- fits[[i]]$X
-            stationary_beta <- fits[[i]]$chain$beta[preds$stationary_iterations, ]
-            mean_process <- X %*% t(stationary_beta)
+            #-------------------------------------------------------------------------------
+            # Compute theta (indicator that "prediction" was below mean process)
+            #-------------------------------------------------------------------------------
+            thetas <- list()
+            for (i in seq_along(fits)) {
+                X <- fits[[i]]$X
+                stationary_beta <- fits[[i]]$chain$beta[preds$stationary_iterations, ]
+                mean_process <- X %*% t(stationary_beta)
 
-            thetas[[i]] <- purrr::map(preds[[i]], ~ rowMeans(.x < mean_process))
-        }
-        names(thetas) <- names(fits)
+                thetas[[i]] <- purrr::map(preds[[i]], ~ rowMeans(.x < mean_process))
+            }
+            names(thetas) <- names(fits)
 
-        pred_out <- purrr::map(preds, 1)
-        pred_out$stationary_iterations <- stationary_iterations
-        out <- list("predictions" = pred_out, "bootstrapped_thetas" = thetas)
+            pred_out <- purrr::map(preds, 1)
+            pred_out$stationary_iterations <- stationary_iterations
+            out <- list("predictions" = pred_out, "bootstrapped_thetas" = thetas)
 
-        saveRDS(out, file = outpath)
-        if(return) {
-            return(out)
+            saveRDS(out, file = outpath)
+
+            if(return) {
+                return(out)
+            }
         }
     }
 
