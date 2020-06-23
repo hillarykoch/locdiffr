@@ -344,8 +344,8 @@ sample_new_nngps <-
 
                 saveRDS(out, file = gsub(
                     outpath,
-                    pattern = "\\.",
-                    replacement = paste0("_batch", batch, ".")
+                    pattern = "\\.rds",
+                    replacement = paste0("_batch", batch, ".rds")
                 ))
             }
 
@@ -361,7 +361,7 @@ sample_new_nngps <-
             # read in the batch files
             batch_files <- list.files(path = dirname(gsub(
                 outpath,
-                pattern = "\\.[[:alpha:]]*", replacement = "")
+                pattern = "\\.rds", replacement = "")
             ),
             pattern = "batch", full.names = TRUE)
             b <- purrr::map(batch_files, readRDS)
