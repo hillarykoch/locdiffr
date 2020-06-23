@@ -280,23 +280,24 @@ sample_new_nngps <-
         winsizes <- as.numeric(names(zs))
 
         if (parallel) {
-            cluster <- makeCluster(ncores)
-            registerDoParallel(cluster)
-            clusterEvalQ(cluster, library(sgp))
-            clusterEvalQ(cluster, library(tidyverse))
+            cluster <- parallel::makeCluster(ncores)
+            doParallel::registerDoParallel(cluster)
+            parallel::clusterEvalQ(cluster, library(sgp))
+            parallel::clusterEvalQ(cluster, library(tidyverse))
 
             preds <-
-                foreach(i = seq_along(winsizes), .packages = "foreach") %dopar% {
+                foreach::foreach(i = seq_along(winsizes), .packages = "foreach") %dopar% {
                     s <- matrix(zs[[i]]$z1$crd, ncol = 1)
                     y <- map(zs[[i]], "z_s") %>%
                         dplyr::bind_cols() %>%
                         as.matrix
                     X <- fits[[i]]$X
 
-                    make_pred_sparse(fits[[i]]$chain, y, s, X, stationary_iterations, BOOT)
+                    make_pred_sparse(fits[[i]]$chain, y, s, X, stationary_iterations, BOOT) %>%
+                        purrr::array_branch(margin = 3)
                 }
 
-            stopCluster(cluster)
+            parallel::stopCluster(cluster)
         } else {
             preds <- list()
 
@@ -325,11 +326,11 @@ sample_new_nngps <-
             stationary_beta <- fits[[i]]$chain$beta[preds$stationary_iterations, ]
             mean_process <- X %*% t(stationary_beta)
 
-            thetas[[i]] <- map(preds[[i]], ~ rowMeans(.x < mean_process))
+            thetas[[i]] <- purrr::map(preds[[i]], ~ rowMeans(.x < mean_process))
         }
         names(thetas) <- names(fits)
 
-        pred_out <- map(preds, 1)
+        pred_out <- purrr::map(preds, 1)
         pred_out$stationary_iterations <- stationary_iterations
         out <- list("predictions" = pred_out, "bootstrapped_thetas" = thetas)
 
