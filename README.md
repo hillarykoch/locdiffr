@@ -31,12 +31,12 @@ doesn't work, need to try
 
 ```console
 git clone https://github.com/hillarykoch/sgp
-R CMD build sgp
 R
 ```
 
 ```r
 Sys.setenv("PKG_LIBS" = "/usr/lib64/R/modules/lapack.so")
+devtools::build(pkg = "sgp/")
 install.packages("sgp_0.0.99.tar.gz", repos = NULL, type = "source")
 q()
 n

@@ -10,6 +10,7 @@ Encoding: UTF-8
 LazyData: true
 Imports:
     doParallel,
+    dplyr,
     emulator,
     fields,
     foreach,
@@ -21,7 +22,8 @@ Imports:
     purrr,
     RandomFieldsUtils,
     Rcpp (>= 0.12.16),
-    stats
+    stats,
+    tidyverse
 Depends: R (>= 3.5)
 LinkingTo:
     Rcpp,

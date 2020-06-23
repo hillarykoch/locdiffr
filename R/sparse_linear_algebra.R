@@ -1,10 +1,3 @@
-# Sparse functions, like in Finley et al. (2019)
-library(Matrix)
-library(tidyverse)
-library(inline)
-library(Rcpp)
-library(RcppArmadillo)
-
 get_neighbor_list <- function(y, num_neighbors) {
     neighbor_list <- list()
     neighbor_list[[1]] <- NA
