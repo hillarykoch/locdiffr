@@ -478,11 +478,18 @@ test_by_wFDR <-
         }
 
         # Test
-        wfdr <- wFDR(theta_list = theta_list, alpha = alpha, nthresh = nthresh)
         crd <- purrr::map(z, ~ .x[[1]]$crd)
-
-        rej <- purrr::map2(crd, wfdr, ~ tidyr::tibble("crd" = .x, "reject" = .y))
-
+        if(length(alpha) > 1) {
+            wfdr <- map(alpha, ~ wFDR(theta_list = theta_list, alpha = .x, nthresh = nthresh))
+            rej <- list()
+            for(i in seq_along(alpha)) {
+                rej[[i]] <- purrr::map2(crd, wfdr[[i]], ~ tidyr::tibble("crd" = .x, "reject" = .y))
+            }
+            names(rej) <- alpha
+        } else {
+            wfdr <- wFDR(theta_list = theta_list, alpha = alpha, nthresh = nthresh)
+            rej <- purrr::map2(crd, wfdr, ~ tidyr::tibble("crd" = .x, "reject" = .y))
+        }
 
         saveRDS(rej, outpath)
 
@@ -508,7 +515,11 @@ test_by_wFDX <-
         # beta: wFDX = P(FDR > beta) < alpha
         # nthresh: number of thresholds used to compute wFDX
         # bootstrap_replicates: number of bootstrap replicates used to approximate the probability of exceedance
-
+    
+        if(length(alpha) != length(beta)) {
+            stop("Parameters alpha and beta should be the same length.")
+        }
+        
         z <- readRDS(scc_scan_file)
         theta_list <- readRDS(sampled_nngps_file)$bootstrapped_thetas
 
@@ -523,16 +534,35 @@ test_by_wFDX <-
         }
 
         # Test
-        wfdx <-
-            wFDX(
-                theta_list = theta_list,
-                alpha = alpha,
-                beta = beta,
-                nthresh = nthresh
-            )
         crd <- purrr::map(z, ~ .x[[1]]$crd)
-
-        rej <- purrr::map2(crd, wfdx, ~ tidyr::tibble("crd" = .x, "reject" = .y))
+        if(length(alpha) > 1) {
+            wfdx <-
+                purrr::map2(alpha,
+                            beta,
+                            ~ wFDX(
+                                theta_list = theta_list,
+                                alpha = .x,
+                                beta = .y,
+                                nthresh = nthresh
+                            ))
+            
+            rej <- list()
+            for(i in seq_along(wfdx)) {
+                rej[[i]] <- purrr::map2(crd, wfdx[[i]], ~ tidyr::tibble("crd" = .x, "reject" = .y))
+            }
+            names(rej) <- purrr::map2(alpha, beta, ~ paste0(.x, "_", .y))
+            
+        } else {
+            wfdx <-
+                wFDX(
+                    theta_list = theta_list,
+                    alpha = alpha,
+                    beta = beta,
+                    nthresh = nthresh
+                )
+            rej <- purrr::map2(crd, wfdx, ~ tidyr::tibble("crd" = .x, "reject" = .y))
+        }
+       
 
         saveRDS(rej, outpath)
 
