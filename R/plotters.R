@@ -1,4 +1,3 @@
-
 plot_rejections_along_process <-
     function(scc_scan_file,
              mcmc_fit_file,
@@ -30,17 +29,20 @@ plot_rejections_along_process <-
         z_df <- purrr::imap(z[[i]], ~ mutate(.x, "process" = .y)) %>%
             bind_rows %>%
             mutate(scc = NULL) %>%
-            setNames(c("crd", "val", "process"))
+            setNames(c("crd", "val", "process")) %>%
+            dplyr::filter(crd %in% rej[[1]][[i]]$crd)
         pred_df <-
             tidyr::tibble("crd" = z[[i]]$z1$crd,
                           "val" = rowMeans(preds[[i]]),
-                          "process" = "z_star")
+                          "process" = "z_star") %>%
+            dplyr::filter(crd %in% rej[[1]][[i]]$crd)
 
         mean_process_df <- tidyr::tibble(
             "crd" = z[[i]]$z1$crd,
             "val" = as.vector(fits[[i]]$X %*% colMeans(fits[[i]]$chain$beta[preds$stationary_iterations,])),
             "process" = "mean_function"
-        )
+        ) %>%
+            dplyr::filter(crd %in% rej[[1]][[i]]$crd)
 
         line_df <- as_tibble(bind_rows(z_df, pred_df, mean_process_df)) %>%
             mutate(process = as.factor(process))
