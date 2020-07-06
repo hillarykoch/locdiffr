@@ -20,6 +20,8 @@ library(sgp)
 
 We will run a preliminary analysis with some toy Hi-C data. There are two replicates each from two conditions. If you have more replicates, or differing numbers of replicates from each condition, that's okay. The package will automatically select which replicates to retain based on sequencing depth.
 
+## Input
+
 To begin the analysis, you need file paths to all of the data, split into two groups. The data should be in the following tab-delimited format:
 
 | Loc1 | Loc2   | Counts |
@@ -28,7 +30,7 @@ To begin the analysis, you need file paths to all of the data, split into two gr
 | 0    | 50000  | 88     |
 | 0    | 100000 | 40     |
 
-Here, Loc1 is the start of the first bin, Loc2 the start of the second bin, and counts indicating the read counts for the interactions between those 2 bins. The value in Loc1 should always be less than or equal to the value in Loc2.
+Here, Loc1 is the start of the first bin, Loc2 the start of the second bin, and counts indicating the read counts for the interactions between those 2 bins. The value in Loc1 should always be less than or equal to the value in Loc2. _**An individual dataset is intended to be Hi-C data from an entire chromosome. Chromosomes should be analyzed separately.**_
 
 Let's prepare the data pre-loaded into this package. We can see that there are 4 datasets -- two from a knockout group and two from a parent group. These data are already in the correct format.
 
@@ -38,6 +40,7 @@ all_data <- list.files(system.file("extdata", package = "sgp"))
 print(all_data)
 ```
 
+## Core analysis
 
 Once we have defined file paths to two groups, the rest of the analysis is straightforward and proceeds as follows:
 
@@ -104,6 +107,23 @@ test_by_wFDX(
 
 ```
 
+## Extracting regions in BED format
+
+You can easily use the testing output from `test_by_wFDR` and `test_by_wFDX` to make 2 BED files of all examined loci, one containing loci which lie in a rejected region, and another containing loci which do not lie in a rejected region. This is done with the function `make_BED_from_rejections`. In the toy example used in this vignette, we only look at 1 chromosome. In practice, you will have several chromosomes. `infiles` contains a vector of paths to testing output from several chromosomes, and `chromosomes` is a  (integer or character string) vector listing all the chromosomes **in the same order as the files in `infiles`**. It is absolutely essential that the order of `infiles` matches the order of `chromosomes`, as this function writes BED files containing the 3 essential BED columns: chromosome, start, and stop.
+
+```{r, cache = TRUE, message = FALSE, warning = FALSE}
+make_BED_from_rejections(
+    infiles = "../inst/extdata/output/wfdr.rds",
+    chromosomes = 19,
+    null_outfile = "../inst/extdata/output/null_wfdr.bed",
+    rejected_outfile = "../inst/extdata/output/rejected_wfdr.bed",
+    resolution = 40000
+    )
+```
+
+
+## Built-in plotting tools
+
 You can easily view the data and the output of the transformed SCC scan, verify that the model fitting is proceeding as expected, and check rejection locations with `plot_cond_vs_cond` and `plot_rejections_along_process`.
 
 `plot_cond_vs_cond` shows a Hi-C heatmap, where each half of the plotted heatmap shows data from a given condition. You can specify the `sub_range` argument to zoom in on a given region. NOTE: This function downsamples the datasets to equal reads from each condition so that comparisons are happening on the same scale.   
@@ -165,4 +185,3 @@ diff_v_rej_zoom <- plot_rej_vs_diffs(
 cowplot::plot_grid(diff_v_rej, diff_v_rej_zoom, nrow = 1, ncol = 2)
 
 ```
-

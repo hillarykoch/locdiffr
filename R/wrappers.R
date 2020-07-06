@@ -257,7 +257,7 @@ sample_new_nngps <-
              stationary_iterations,
              parallel = FALSE,
              ncores = 10,
-             BOOT = 500,
+             BOOT = 100,
              nbatches = 1,
              return = FALSE) {
         # scc_scan_file: path to rds file output from run_scc_scan
@@ -515,11 +515,11 @@ test_by_wFDX <-
         # beta: wFDX = P(FDR > beta) < alpha
         # nthresh: number of thresholds used to compute wFDX
         # bootstrap_replicates: number of bootstrap replicates used to approximate the probability of exceedance
-    
+
         if(length(alpha) != length(beta)) {
             stop("Parameters alpha and beta should be the same length.")
         }
-        
+
         z <- readRDS(scc_scan_file)
         theta_list <- readRDS(sampled_nngps_file)$bootstrapped_thetas
 
@@ -545,13 +545,13 @@ test_by_wFDX <-
                                 beta = .y,
                                 nthresh = nthresh
                             ))
-            
+
             rej <- list()
             for(i in seq_along(wfdx)) {
                 rej[[i]] <- purrr::map2(crd, wfdx[[i]], ~ tidyr::tibble("crd" = .x, "reject" = .y))
             }
             names(rej) <- purrr::map2(alpha, beta, ~ paste0(.x, "_", .y))
-            
+
         } else {
             wfdx <-
                 wFDX(
@@ -562,7 +562,7 @@ test_by_wFDX <-
                 )
             rej <- purrr::map2(crd, wfdx, ~ tidyr::tibble("crd" = .x, "reject" = .y))
         }
-       
+
 
         saveRDS(rej, outpath)
 
