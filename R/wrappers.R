@@ -8,6 +8,8 @@ run_scc_scan <-
              outpath,
              resolution,
              winsizes = seq(10, 100, by = 10),
+             min_count = 1,
+             proportion_below_min_count = 0.1,
              parallel = FALSE,
              ncores = 10,
              offset = TRUE,
@@ -96,7 +98,9 @@ run_scc_scan <-
                                 .y,
                                 h = 0,
                                 win_min = winsize,
-                                win_max = winsize
+                                win_max = winsize,
+                                min_count = min_count,
+                                proportion_below_min_count = proportion_below_min_count
                             )
                         )
 
@@ -123,26 +127,30 @@ run_scc_scan <-
                     map2(
                         map(dd, "cond1"),
                         map(dd, "cond2"),
-                        ~ sgp::get_loc_sim(
+                        ~ get_loc_sim(
                             .x,
                             .y,
                             h = 0,
                             win_min = winsize,
-                            win_max = winsize
+                            win_max = winsize,
+                            min_count = min_count,
+                            proportion_below_min_count = proportion_below_min_count
                         )
                     )
 
 
                 # Get z-scores of these statistics
-                z <- map(sccs, get_z)
+                z <- purrr::map(sccs, "scoremat") %>%
+                    purrr::map(get_z)
 
                 # Take out loci which are exactly equal (e.g., loci at the centromere)
                 oneidx <-
-                    Reduce(intersect, map(sccs, ~ which(.x == 1)))
+                    Reduce(intersect, purrr::map(sccs, "scoremat") %>% map( ~ which(.x == 1)))
+                filtidx <- purrr::map(sccs, "rm_loc_list") %>% unlist
 
                 # save scc results
                 zs[[i]] <-
-                    map(z, ~ dplyr::filter(.x, !(crd %in% oneidx))) %>%
+                    map(z, ~ dplyr::filter(.x, (!(crd %in% oneidx) & !(crd %in% filtidx)))) %>%
                     setNames(paste0("z", seq_along(z)))
             }
         }

@@ -26,7 +26,9 @@ get_loc_sim <-
              mat2,
              h = 0,
              win_min = 25,
-             win_max = 25) {
+             win_max = 25,
+             min_count,
+             proportion_below_min_count) {
         if(h > 0) {
             smoo1 <- fastMeanFilter(mat1, h)
             smoo2 <- fastMeanFilter(mat2, h)
@@ -39,8 +41,13 @@ get_loc_sim <-
 
         nd <- nrow(smoo1)
         scoremat <- stdmat <-  matrix(0, nd, win_max)
+
+        rm_loc_list <- list()
+        count <- 1
         for (i in win_min:win_max) {
             l <- nd - i + 1
+            rm_loc <- rep(FALSE, l)
+
             for (j in seq_len(l)) {
                 win <- j:(j + i - 1)
                 if (sum(smoo1[win, win]) == 0 |
@@ -52,8 +59,16 @@ get_loc_sim <-
                     scoremat[j, i] = LSIM$scc
                     stdmat[j, i] = LSIM$std
                 }
+
+                # Filter out loci that don't have enough counts
+                if(mean(smoo1[win, win][lower.tri(smoo1[win, win])] < min_count) > proportion_below_min_count) {
+                    rm_loc[j] <- TRUE
+                }
             }
+            rm_loc_list[[count]] <- which(rm_loc)
+            count <- count + 1
         }
+        names(rm_loc_list) <- win_min:win_max
 
         scoremat <- scoremat[, -(1:(win_min - 1))]
         stdmat <- stdmat[, -(1:(win_min - 1))]
@@ -61,7 +76,7 @@ get_loc_sim <-
         scoremat[which(is.na(scoremat), arr.ind = TRUE)] <- 1
         stdmat[which(is.na(stdmat), arr.ind = TRUE)] <- 0
 
-        scoremat
+        list("scoremat" = scoremat, "rm_loc_list" = rm_loc_list)
     }
 
 hic_ld <- function(smoo1, smoo2, rang, resol = 50000) {
