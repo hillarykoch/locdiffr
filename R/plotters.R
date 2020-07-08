@@ -174,7 +174,8 @@ plot_rej_vs_diffs <-
              resolution,
              condition_names = NULL,
              offset = TRUE,
-             sub_range = NULL) {
+             sub_range = NULL,
+             absolute = FALSE) {
         # THIS FUNCTION DOWNSAMPLES THE DATA TO EQUAL READS FOR MORE ACCURATE COMPARISON
         # infiles1, infiles2: vector/list of paths to input files for both conditions
         # rejection_file: file output from test_with_FDR or test_with_FDX
@@ -230,8 +231,13 @@ plot_rej_vs_diffs <-
         rm(dmat)
 
         dd <- downsample_to_equal_reads(list(d1, d2))
-        abs_diffs <- abs(dd[[1]] - dd[[2]])
-
+        
+        if(absolute) {
+            abs_diffs <- abs(dd[[1]] - dd[[2]])    
+        } else {
+            abs_diffs <- dd[[1]] - dd[[2]]
+        }
+        
         rejections <- readRDS(rejections_file)
         winsizes <- as.numeric(names(rejections))
 
@@ -271,30 +277,60 @@ plot_rej_vs_diffs <-
 
             #-------------------------------------------------------------------
             # plot
-            labels <- c(paste0("|", paste0(condition_names, collapse = "-"), "|"), "rejections")
-
-            rej_p <- ggplot(data = dplyr::filter(rej_molten, Var1 < Var2), aes(
-                x = Var1,
-                y = Var2,
-                fill = value
-            )) +
-                geom_tile() +
-                scale_fill_distiller(limits = c(0,1), palette = "Greys", direction = 1) +
-                ggnewscale::new_scale("fill") +
-                geom_tile(
-                    mapping = aes(
-                        x = Var1,
-                        y = Var2,
-                        fill = log2(value + 1)
-                    ),
-                    data = dplyr::filter(diff_molten, Var1 >= Var2)
-                ) +
-                coord_fixed() +
-                scale_fill_gradient(low = "white", high = "red", na.value = "white") +
-                theme_minimal() +
-                labs(x = labels[1], y = labels[2]) +
-                theme(legend.position = "none")
-
-                return(rej_p)
+            if(absolute) {
+                labels <- c(paste0("|", paste0(condition_names, collapse = "-"), "|"), "rejections")    
+            } else {
+                labels <- c(paste0(condition_names, collapse = "-"), "rejections")
+            }
+            
+            
+            if(absolute) {
+                rej_p <- ggplot(data = dplyr::filter(rej_molten, Var1 < Var2), aes(
+                    x = Var1,
+                    y = Var2,
+                    fill = value
+                )) +
+                    geom_tile() +
+                    scale_fill_distiller(limits = c(0,1), palette = "Greys", direction = 1) +
+                    ggnewscale::new_scale("fill") +
+                    geom_tile(
+                        mapping = aes(
+                            x = Var1,
+                            y = Var2,
+                            fill = log2(value + 1)
+                        ),
+                        data = dplyr::filter(diff_molten, Var1 >= Var2)
+                    ) +
+                    coord_fixed() +
+                    scale_fill_gradient(low = "white", high = "red", na.value = "white") +
+                    theme_minimal() +
+                    labs(x = labels[1], y = labels[2]) +
+                    theme(legend.position = "none")
+            } else {
+                diff_molten[diff_molten$value < 0,"value"] <- -log2(abs(diff_molten[diff_molten$value < 0,"value"]))
+                diff_molten[diff_molten$value > 0,"value"] <- log2(diff_molten[diff_molten$value > 0,"value"])
+                rej_p <- ggplot(data = dplyr::filter(rej_molten, Var1 < Var2), aes(
+                    x = Var1,
+                    y = Var2,
+                    fill = value
+                )) +
+                    geom_tile() +
+                    scale_fill_distiller(limits = c(0,1), palette = "Greys", direction = 1) +
+                    ggnewscale::new_scale("fill") +
+                    geom_tile(
+                        mapping = aes(
+                            x = Var1,
+                            y = Var2,
+                            fill = value
+                        ),
+                        data = dplyr::filter(diff_molten, Var1 >= Var2)
+                    ) +
+                    coord_fixed() +
+                    scale_fill_distiller(palette = "RdBu", na.value = "white") +
+                    theme_minimal() +
+                    labs(x = labels[1], y = labels[2]) +
+                    theme(legend.position = "none")
+            }
+            return(rej_p)
         }
     }

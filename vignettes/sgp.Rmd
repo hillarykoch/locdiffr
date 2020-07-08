@@ -183,7 +183,7 @@ diff_v_rej_zoom <- plot_rej_vs_diffs(
     rejections_file = "../inst/extdata/output/wfdr.rds",
     resolution = 40000,
     condition_names = c("knockout", "parent"),
-    sub_range = c(4800000, 10000000)
+    sub_range = c(4900000, 10100000)
     )
 
 cowplot::plot_grid(diff_v_rej, diff_v_rej_zoom, nrow = 1, ncol = 2)
