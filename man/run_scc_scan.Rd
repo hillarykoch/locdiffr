@@ -7,7 +7,7 @@ Compute the SCC scan statistic for a sequence of window sizes.
 This function implements the SCC scan and transforms the scan to Z-scores. It can be paralllized across a grid of window sizes.
 }
 \usage{
-run_scc_scan(infiles1, infiles2, outpath, resolution, winsizes = seq(10, 100, by = 10), min_count = 1, proportion_below_min_count = 0.1, parallel = FALSE, ncores = 10, offset = TRUE, return = FALSE)
+run_scc_scan(infiles1, infiles2, outpath, resolution, winsizes = seq(10, 100, by = 10), min_count = 1, proportion_below_min_count = 0.25, parallel = FALSE, ncores = 10, offset = TRUE, return = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -48,7 +48,7 @@ Logical. Should the output also be returned by the function?
 \details{
 This function writes the output to the provided outpath in an rds file.
 
-Windows with insufficient reads can be filtered from the analysis using "min_count" and "proportion_below_min_count" options. The default sets min_count = 1 and proportion_below_min_count = 0.1. This means that if more than 10\% of the bins within a window have less than 1 measured interaction, the window is filtered from downstream analyses. To do no filtering, set proportion_below_min_count=1.
+Windows with insufficient reads can be filtered from the analysis using "min_count" and "proportion_below_min_count" options. The default sets min_count = 1 and proportion_below_min_count = 0.25. This means that if more than 25\% of the bins within a window have less than 1 measured interaction, the window is filtered from downstream analyses. To do no filtering, set proportion_below_min_count=1.
 }
 \value{
 If return = TRUE, this function returns a list of length winsizes which contains the SCC scan for each window size.

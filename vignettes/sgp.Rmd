@@ -61,7 +61,7 @@ run_scc_scan(
     parallel = FALSE,
     offset = TRUE,
     min_count = 1,
-    proportion_below_min_count = 0.1
+    proportion_below_min_count = 0.25
 )
 
 # Fit the nearest-neighbor Gaussian process model via MCMC
@@ -85,7 +85,7 @@ sample_new_nngps(
 
 ```
 
-_Note that windows can be filtered during the_\texttt{run_scc_scan} _step_: this is done with the options `min_count` and `proportion_below_min_count`. The setting in this example has `min_count = 1` and `proportion_below_min_count = 0.1`. This means that if more than 10\% of the bins within a window have less than 1 measured interaction, the window is filtered from downstream analyses. To do no filtering, one can set `proportion_below_min_count=1`.
+_Note that windows can be filtered during the_\texttt{run_scc_scan} _step_: this is done with the options `min_count` and `proportion_below_min_count`. The setting in this example has `min_count = 1` and `proportion_below_min_count = 0.25`. This means that if more than 25\% of the bins within a window have less than 1 measured interaction, the window is filtered from downstream analyses. To do no filtering, one can set `proportion_below_min_count=1`.
 
 Results are used to test whether or not a region contains significantly differential interactions. To test, we need to compute $\theta^b(s_w):=\text{I}\big[Z^{b}(s_w) < \mu^b(s_w)\big]$, the indicator that the nearest-neighbor Gaussian process sampled at iteration $b$ at location $s_w$ is less than the mean process at iteration $b$ at the same location. This is done within the `sample_new_nngps` function. Note that, to test using the recommended weighted false discovery exceedance (wFDX) quantity, some bootstrapping needs to be done. You can specify the number of bootstrap replicates using the `BOOT` argument in the `sample_new_nngps` function. The larger the value of `BOOT`, the more accuracy your estimate of wFDX. A larger value of `BOOT` also slightly increases computationally burden.
 

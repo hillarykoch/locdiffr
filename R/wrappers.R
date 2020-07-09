@@ -9,7 +9,7 @@ run_scc_scan <-
              resolution,
              winsizes = seq(10, 100, by = 10),
              min_count = 1,
-             proportion_below_min_count = 0.1,
+             proportion_below_min_count = 0.25,
              parallel = FALSE,
              ncores = 10,
              offset = TRUE,
