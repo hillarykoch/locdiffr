@@ -106,14 +106,18 @@ run_scc_scan <-
 
 
                     # Get z-scores of these statistics
-                    z <- map(sccs, get_z)
+                    z <- purrr::map(sccs, "scoremat") %>%
+                        purrr::map(get_z)
 
                     # Take out loci which are exactly equal (e.g., loci at the centromere)
                     oneidx <-
-                        Reduce(intersect, map(sccs, ~ which(.x == 1)))
+                        Reduce(intersect, purrr::map(sccs, "scoremat") %>% map( ~ which(.x == 1)))
+
+                    # Take out loci which are exactly equal (e.g., loci at the centromere)
+                    filtidx <- purrr::map(sccs, "rm_loc_list") %>% unlist
 
                     # save scc results
-                    map(z, ~ dplyr::filter(.x, !(crd %in% oneidx))) %>%
+                    map(z, ~ dplyr::filter(.x, (!(crd %in% oneidx) & !(crd %in% filtidx)))) %>%
                         setNames(paste0("z", seq_along(z)))
                 }
 
