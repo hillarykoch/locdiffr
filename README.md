@@ -1,9 +1,10 @@
 # Multi-Scale Differential Interactions
 
 ## Dependencies
-**This package was developed in R version 3.6.2**
 
-To use this package, you need a compiler that has support for C++11, such as
+1. **This package was developed in R version 3.6.2, back compatability is not guaranteed**
+
+2. To use this package, you need a compiler that has support for C++11, such as
     *   GCC: [see here, for example](https://www.gnu.org/software/gcc/projects/cxx-status.html#cxx11)
     *   clang: [see here](http://clang.llvm.org/cxx_status.html)
     
