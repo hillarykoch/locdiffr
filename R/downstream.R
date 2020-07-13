@@ -58,8 +58,8 @@ make_BED_from_rejections <- function(infiles,
             rep(rejected_crds[[i]], each = resolution / region_size),
             ~ tibble(
                 "chr" = paste0("chr", chromosomes[i]),
-                "start" = .y * resolution + .x,
-                "stop" = .y * resolution + .x + region_size - 1
+                "start" = (.y - 1) * resolution + .x - 1,
+                "stop" = (.y - 1) * resolution + .x + region_size - 2
             )
         ) %>%
             dplyr::arrange(start)
@@ -69,8 +69,8 @@ make_BED_from_rejections <- function(infiles,
             rep(null_crds[[i]], each = resolution / region_size),
             ~ tibble(
                 "chr" = paste0("chr", chromosomes[i]),
-                "start" = .y * resolution + .x,
-                "stop" = .y * resolution + .x + region_size - 1
+                "start" = (.y - 1) * resolution + .x - 1,
+                "stop" = (.y - 1) * resolution + .x + region_size - 2
             )
         ) %>%
             dplyr::arrange(start)
