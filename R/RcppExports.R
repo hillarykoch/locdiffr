@@ -2,94 +2,94 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 cinv <- function(covmat) {
-    .Call(`_sgp_cinv`, covmat)
+    .Call(`_locdiffr_cinv`, covmat)
 }
 
 cifelse <- function(d) {
-    .Call(`_sgp_cifelse`, d)
+    .Call(`_locdiffr_cifelse`, d)
 }
 
 cgeteigs <- function(Q) {
-    .Call(`_sgp_cgeteigs`, Q)
+    .Call(`_locdiffr_cgeteigs`, Q)
 }
 
 cifelse_eigvals <- function(eigvals, thresh) {
-    .Call(`_sgp_cifelse_eigvals`, eigvals, thresh)
+    .Call(`_locdiffr_cifelse_eigvals`, eigvals, thresh)
 }
 
 get_ldet <- function(Q) {
-    .Call(`_sgp_get_ldet`, Q)
+    .Call(`_locdiffr_get_ldet`, Q)
 }
 
 cpopulate_true_differences <- function(truth_mat, true_differences) {
-    .Call(`_sgp_cpopulate_true_differences`, truth_mat, true_differences)
+    .Call(`_locdiffr_cpopulate_true_differences`, truth_mat, true_differences)
 }
 
 cpopulate_rejected_differences <- function(rej_mat, rej_list, win_size) {
-    .Call(`_sgp_cpopulate_rejected_differences`, rej_mat, rej_list, win_size)
+    .Call(`_locdiffr_cpopulate_rejected_differences`, rej_mat, rej_list, win_size)
 }
 
 fastMeanFilter <- function(mat, h) {
-    .Call(`_sgp_fastMeanFilter`, mat, h)
+    .Call(`_locdiffr_fastMeanFilter`, mat, h)
 }
 
 cpwdist <- function(locs1, locs2) {
-    .Call(`_sgp_cpwdist`, locs1, locs2)
+    .Call(`_locdiffr_cpwdist`, locs1, locs2)
 }
 
 cmake_adj_mat <- function(adj_mat, locsj, winsizes, cumsum_nlocs, j) {
-    .Call(`_sgp_cmake_adj_mat`, adj_mat, locsj, winsizes, cumsum_nlocs, j)
+    .Call(`_locdiffr_cmake_adj_mat`, adj_mat, locsj, winsizes, cumsum_nlocs, j)
 }
 
 ctest_hierarchically <- function(filepath, alpha, prob_theta_equals_zero, rank_map) {
-    .Call(`_sgp_ctest_hierarchically`, filepath, alpha, prob_theta_equals_zero, rank_map)
+    .Call(`_locdiffr_ctest_hierarchically`, filepath, alpha, prob_theta_equals_zero, rank_map)
 }
 
 crunif <- function(n, seed) {
-    .Call(`_sgp_crunif`, n, seed)
+    .Call(`_locdiffr_crunif`, n, seed)
 }
 
 csolve_for_A_and_D <- function(cov_cur, neighbor_list) {
-    .Call(`_sgp_csolve_for_A_and_D`, cov_cur, neighbor_list)
+    .Call(`_locdiffr_csolve_for_A_and_D`, cov_cur, neighbor_list)
 }
 
 csparse_quadratic_form_symm <- function(u, A, D, neighbor_list) {
-    .Call(`_sgp_csparse_quadratic_form_symm`, u, A, D, neighbor_list)
+    .Call(`_locdiffr_csparse_quadratic_form_symm`, u, A, D, neighbor_list)
 }
 
 csparse_quadratic_form_asymm <- function(u, v, A, D, neighbor_list) {
-    .Call(`_sgp_csparse_quadratic_form_asymm`, u, v, A, D, neighbor_list)
+    .Call(`_locdiffr_csparse_quadratic_form_asymm`, u, v, A, D, neighbor_list)
 }
 
 csolve_for_B_and_b <- function(y, X, A, D, neighbor_list, precision_beta) {
-    .Call(`_sgp_csolve_for_B_and_b`, y, X, A, D, neighbor_list, precision_beta)
+    .Call(`_locdiffr_csolve_for_B_and_b`, y, X, A, D, neighbor_list, precision_beta)
 }
 
 cmake_one_pred_sparse <- function(neighbor_list, y, s, X, cond_cov, BOOT, SEED) {
-    .Call(`_sgp_cmake_one_pred_sparse`, neighbor_list, y, s, X, cond_cov, BOOT, SEED)
+    .Call(`_locdiffr_cmake_one_pred_sparse`, neighbor_list, y, s, X, cond_cov, BOOT, SEED)
 }
 
 csolve_for_A_and_D_2d <- function(cov_cur, neighbor_list) {
-    .Call(`_sgp_csolve_for_A_and_D_2d`, cov_cur, neighbor_list)
+    .Call(`_locdiffr_csolve_for_A_and_D_2d`, cov_cur, neighbor_list)
 }
 
 csparse_quadratic_form_symm_2d <- function(u, A, D, neighbor_list) {
-    .Call(`_sgp_csparse_quadratic_form_symm_2d`, u, A, D, neighbor_list)
+    .Call(`_locdiffr_csparse_quadratic_form_symm_2d`, u, A, D, neighbor_list)
 }
 
 csparse_quadratic_form_asymm_2d <- function(u, v, A, D, neighbor_list) {
-    .Call(`_sgp_csparse_quadratic_form_asymm_2d`, u, v, A, D, neighbor_list)
+    .Call(`_locdiffr_csparse_quadratic_form_asymm_2d`, u, v, A, D, neighbor_list)
 }
 
 csolve_for_B_and_b_2d <- function(y, X, A, D, neighbor_list, precision_beta) {
-    .Call(`_sgp_csolve_for_B_and_b_2d`, y, X, A, D, neighbor_list, precision_beta)
+    .Call(`_locdiffr_csolve_for_B_and_b_2d`, y, X, A, D, neighbor_list, precision_beta)
 }
 
 ccompute_bwfdr <- function(weighted_rej, rej_prob, thresh, cluster_size_vec) {
-    .Call(`_sgp_ccompute_bwfdr`, weighted_rej, rej_prob, thresh, cluster_size_vec)
+    .Call(`_locdiffr_ccompute_bwfdr`, weighted_rej, rej_prob, thresh, cluster_size_vec)
 }
 
 ccompute_bwfdx <- function(rej_prob, thresh, cluster_size_vec, beta, bootstrapped_theta_mat) {
-    .Call(`_sgp_ccompute_bwfdx`, rej_prob, thresh, cluster_size_vec, beta, bootstrapped_theta_mat)
+    .Call(`_locdiffr_ccompute_bwfdx`, rej_prob, thresh, cluster_size_vec, beta, bootstrapped_theta_mat)
 }
 

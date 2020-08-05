@@ -24,7 +24,7 @@ R
 
 ```r
 Sys.setenv("PKG_LIBS" = "/usr/lib64/R/modules/lapack.so")
-devtools::build(pkg = "sgp/")
+devtools::build(pkg = "locdiffr/")
 install.packages("locdiffr_0.0.99.tar.gz", repos = NULL, type = "source")
 q()
 n
@@ -32,5 +32,5 @@ n
 
 ```console
 rm -rf locdiffr
-rm locdiffr_0.0.99.tar.gz
+rm locdiffr_1.0.tar.gz
 ```

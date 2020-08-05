@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // cinv
 arma::mat cinv(arma::mat covmat);
-RcppExport SEXP _sgp_cinv(SEXP covmatSEXP) {
+RcppExport SEXP _locdiffr_cinv(SEXP covmatSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -19,7 +19,7 @@ END_RCPP
 }
 // cifelse
 arma::mat cifelse(const arma::mat& d);
-RcppExport SEXP _sgp_cifelse(SEXP dSEXP) {
+RcppExport SEXP _locdiffr_cifelse(SEXP dSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -30,7 +30,7 @@ END_RCPP
 }
 // cgeteigs
 arma::colvec cgeteigs(const arma::mat& Q);
-RcppExport SEXP _sgp_cgeteigs(SEXP QSEXP) {
+RcppExport SEXP _locdiffr_cgeteigs(SEXP QSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -41,7 +41,7 @@ END_RCPP
 }
 // cifelse_eigvals
 arma::mat cifelse_eigvals(arma::colvec eigvals, const double thresh);
-RcppExport SEXP _sgp_cifelse_eigvals(SEXP eigvalsSEXP, SEXP threshSEXP) {
+RcppExport SEXP _locdiffr_cifelse_eigvals(SEXP eigvalsSEXP, SEXP threshSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -53,7 +53,7 @@ END_RCPP
 }
 // get_ldet
 double get_ldet(arma::mat Q);
-RcppExport SEXP _sgp_get_ldet(SEXP QSEXP) {
+RcppExport SEXP _locdiffr_get_ldet(SEXP QSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -64,7 +64,7 @@ END_RCPP
 }
 // cpopulate_true_differences
 arma::sp_mat cpopulate_true_differences(arma::sp_mat& truth_mat, arma::umat& true_differences);
-RcppExport SEXP _sgp_cpopulate_true_differences(SEXP truth_matSEXP, SEXP true_differencesSEXP) {
+RcppExport SEXP _locdiffr_cpopulate_true_differences(SEXP truth_matSEXP, SEXP true_differencesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -76,7 +76,7 @@ END_RCPP
 }
 // cpopulate_rejected_differences
 arma::sp_mat cpopulate_rejected_differences(arma::sp_mat& rej_mat, arma::colvec& rej_list, uint win_size);
-RcppExport SEXP _sgp_cpopulate_rejected_differences(SEXP rej_matSEXP, SEXP rej_listSEXP, SEXP win_sizeSEXP) {
+RcppExport SEXP _locdiffr_cpopulate_rejected_differences(SEXP rej_matSEXP, SEXP rej_listSEXP, SEXP win_sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -89,7 +89,7 @@ END_RCPP
 }
 // fastMeanFilter
 NumericMatrix fastMeanFilter(NumericMatrix mat, int h);
-RcppExport SEXP _sgp_fastMeanFilter(SEXP matSEXP, SEXP hSEXP) {
+RcppExport SEXP _locdiffr_fastMeanFilter(SEXP matSEXP, SEXP hSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -101,7 +101,7 @@ END_RCPP
 }
 // cpwdist
 arma::mat cpwdist(arma::colvec locs1, arma::colvec locs2);
-RcppExport SEXP _sgp_cpwdist(SEXP locs1SEXP, SEXP locs2SEXP) {
+RcppExport SEXP _locdiffr_cpwdist(SEXP locs1SEXP, SEXP locs2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -113,7 +113,7 @@ END_RCPP
 }
 // cmake_adj_mat
 arma::sp_mat cmake_adj_mat(arma::sp_mat adj_mat, arma::colvec locsj, arma::colvec winsizes, arma::colvec cumsum_nlocs, int j);
-RcppExport SEXP _sgp_cmake_adj_mat(SEXP adj_matSEXP, SEXP locsjSEXP, SEXP winsizesSEXP, SEXP cumsum_nlocsSEXP, SEXP jSEXP) {
+RcppExport SEXP _locdiffr_cmake_adj_mat(SEXP adj_matSEXP, SEXP locsjSEXP, SEXP winsizesSEXP, SEXP cumsum_nlocsSEXP, SEXP jSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -128,7 +128,7 @@ END_RCPP
 }
 // ctest_hierarchically
 arma::mat ctest_hierarchically(std::string filepath, double alpha, arma::colvec prob_theta_equals_zero, arma::colvec rank_map);
-RcppExport SEXP _sgp_ctest_hierarchically(SEXP filepathSEXP, SEXP alphaSEXP, SEXP prob_theta_equals_zeroSEXP, SEXP rank_mapSEXP) {
+RcppExport SEXP _locdiffr_ctest_hierarchically(SEXP filepathSEXP, SEXP alphaSEXP, SEXP prob_theta_equals_zeroSEXP, SEXP rank_mapSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -142,7 +142,7 @@ END_RCPP
 }
 // crunif
 arma::colvec crunif(unsigned int n, unsigned int seed);
-RcppExport SEXP _sgp_crunif(SEXP nSEXP, SEXP seedSEXP) {
+RcppExport SEXP _locdiffr_crunif(SEXP nSEXP, SEXP seedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -154,7 +154,7 @@ END_RCPP
 }
 // csolve_for_A_and_D
 Rcpp::List csolve_for_A_and_D(arma::sp_mat& cov_cur, Rcpp::List& neighbor_list);
-RcppExport SEXP _sgp_csolve_for_A_and_D(SEXP cov_curSEXP, SEXP neighbor_listSEXP) {
+RcppExport SEXP _locdiffr_csolve_for_A_and_D(SEXP cov_curSEXP, SEXP neighbor_listSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -166,7 +166,7 @@ END_RCPP
 }
 // csparse_quadratic_form_symm
 double csparse_quadratic_form_symm(arma::colvec& u, arma::sp_mat& A, arma::colvec& D, Rcpp::List& neighbor_list);
-RcppExport SEXP _sgp_csparse_quadratic_form_symm(SEXP uSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP) {
+RcppExport SEXP _locdiffr_csparse_quadratic_form_symm(SEXP uSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -180,7 +180,7 @@ END_RCPP
 }
 // csparse_quadratic_form_asymm
 double csparse_quadratic_form_asymm(arma::colvec u, arma::colvec v, arma::sp_mat A, arma::colvec D, Rcpp::List neighbor_list);
-RcppExport SEXP _sgp_csparse_quadratic_form_asymm(SEXP uSEXP, SEXP vSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP) {
+RcppExport SEXP _locdiffr_csparse_quadratic_form_asymm(SEXP uSEXP, SEXP vSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -195,7 +195,7 @@ END_RCPP
 }
 // csolve_for_B_and_b
 Rcpp::List csolve_for_B_and_b(arma::mat& y, arma::mat& X, arma::sp_mat& A, arma::colvec& D, Rcpp::List& neighbor_list, arma::mat& precision_beta);
-RcppExport SEXP _sgp_csolve_for_B_and_b(SEXP ySEXP, SEXP XSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP, SEXP precision_betaSEXP) {
+RcppExport SEXP _locdiffr_csolve_for_B_and_b(SEXP ySEXP, SEXP XSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP, SEXP precision_betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -211,7 +211,7 @@ END_RCPP
 }
 // cmake_one_pred_sparse
 arma::mat cmake_one_pred_sparse(Rcpp::List& neighbor_list, arma::mat& y, arma::mat& s, arma::mat& X, arma::mat& cond_cov, int BOOT, unsigned int SEED);
-RcppExport SEXP _sgp_cmake_one_pred_sparse(SEXP neighbor_listSEXP, SEXP ySEXP, SEXP sSEXP, SEXP XSEXP, SEXP cond_covSEXP, SEXP BOOTSEXP, SEXP SEEDSEXP) {
+RcppExport SEXP _locdiffr_cmake_one_pred_sparse(SEXP neighbor_listSEXP, SEXP ySEXP, SEXP sSEXP, SEXP XSEXP, SEXP cond_covSEXP, SEXP BOOTSEXP, SEXP SEEDSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -228,7 +228,7 @@ END_RCPP
 }
 // csolve_for_A_and_D_2d
 Rcpp::List csolve_for_A_and_D_2d(arma::sp_mat& cov_cur, Rcpp::List& neighbor_list);
-RcppExport SEXP _sgp_csolve_for_A_and_D_2d(SEXP cov_curSEXP, SEXP neighbor_listSEXP) {
+RcppExport SEXP _locdiffr_csolve_for_A_and_D_2d(SEXP cov_curSEXP, SEXP neighbor_listSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -240,7 +240,7 @@ END_RCPP
 }
 // csparse_quadratic_form_symm_2d
 double csparse_quadratic_form_symm_2d(arma::colvec& u, arma::sp_mat& A, arma::colvec& D, Rcpp::List& neighbor_list);
-RcppExport SEXP _sgp_csparse_quadratic_form_symm_2d(SEXP uSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP) {
+RcppExport SEXP _locdiffr_csparse_quadratic_form_symm_2d(SEXP uSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -254,7 +254,7 @@ END_RCPP
 }
 // csparse_quadratic_form_asymm_2d
 double csparse_quadratic_form_asymm_2d(arma::colvec u, arma::colvec v, arma::sp_mat A, arma::colvec D, Rcpp::List neighbor_list);
-RcppExport SEXP _sgp_csparse_quadratic_form_asymm_2d(SEXP uSEXP, SEXP vSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP) {
+RcppExport SEXP _locdiffr_csparse_quadratic_form_asymm_2d(SEXP uSEXP, SEXP vSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -269,7 +269,7 @@ END_RCPP
 }
 // csolve_for_B_and_b_2d
 Rcpp::List csolve_for_B_and_b_2d(arma::mat& y, arma::mat& X, arma::sp_mat& A, arma::colvec& D, Rcpp::List& neighbor_list, arma::mat& precision_beta);
-RcppExport SEXP _sgp_csolve_for_B_and_b_2d(SEXP ySEXP, SEXP XSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP, SEXP precision_betaSEXP) {
+RcppExport SEXP _locdiffr_csolve_for_B_and_b_2d(SEXP ySEXP, SEXP XSEXP, SEXP ASEXP, SEXP DSEXP, SEXP neighbor_listSEXP, SEXP precision_betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -285,7 +285,7 @@ END_RCPP
 }
 // ccompute_bwfdr
 arma::colvec ccompute_bwfdr(arma::colvec weighted_rej, arma::colvec rej_prob, arma::colvec thresh, arma::colvec cluster_size_vec);
-RcppExport SEXP _sgp_ccompute_bwfdr(SEXP weighted_rejSEXP, SEXP rej_probSEXP, SEXP threshSEXP, SEXP cluster_size_vecSEXP) {
+RcppExport SEXP _locdiffr_ccompute_bwfdr(SEXP weighted_rejSEXP, SEXP rej_probSEXP, SEXP threshSEXP, SEXP cluster_size_vecSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -299,7 +299,7 @@ END_RCPP
 }
 // ccompute_bwfdx
 arma::colvec ccompute_bwfdx(arma::colvec rej_prob, arma::colvec thresh, arma::colvec cluster_size_vec, double beta, arma::mat bootstrapped_theta_mat);
-RcppExport SEXP _sgp_ccompute_bwfdx(SEXP rej_probSEXP, SEXP threshSEXP, SEXP cluster_size_vecSEXP, SEXP betaSEXP, SEXP bootstrapped_theta_matSEXP) {
+RcppExport SEXP _locdiffr_ccompute_bwfdx(SEXP rej_probSEXP, SEXP threshSEXP, SEXP cluster_size_vecSEXP, SEXP betaSEXP, SEXP bootstrapped_theta_matSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -314,33 +314,33 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_sgp_cinv", (DL_FUNC) &_sgp_cinv, 1},
-    {"_sgp_cifelse", (DL_FUNC) &_sgp_cifelse, 1},
-    {"_sgp_cgeteigs", (DL_FUNC) &_sgp_cgeteigs, 1},
-    {"_sgp_cifelse_eigvals", (DL_FUNC) &_sgp_cifelse_eigvals, 2},
-    {"_sgp_get_ldet", (DL_FUNC) &_sgp_get_ldet, 1},
-    {"_sgp_cpopulate_true_differences", (DL_FUNC) &_sgp_cpopulate_true_differences, 2},
-    {"_sgp_cpopulate_rejected_differences", (DL_FUNC) &_sgp_cpopulate_rejected_differences, 3},
-    {"_sgp_fastMeanFilter", (DL_FUNC) &_sgp_fastMeanFilter, 2},
-    {"_sgp_cpwdist", (DL_FUNC) &_sgp_cpwdist, 2},
-    {"_sgp_cmake_adj_mat", (DL_FUNC) &_sgp_cmake_adj_mat, 5},
-    {"_sgp_ctest_hierarchically", (DL_FUNC) &_sgp_ctest_hierarchically, 4},
-    {"_sgp_crunif", (DL_FUNC) &_sgp_crunif, 2},
-    {"_sgp_csolve_for_A_and_D", (DL_FUNC) &_sgp_csolve_for_A_and_D, 2},
-    {"_sgp_csparse_quadratic_form_symm", (DL_FUNC) &_sgp_csparse_quadratic_form_symm, 4},
-    {"_sgp_csparse_quadratic_form_asymm", (DL_FUNC) &_sgp_csparse_quadratic_form_asymm, 5},
-    {"_sgp_csolve_for_B_and_b", (DL_FUNC) &_sgp_csolve_for_B_and_b, 6},
-    {"_sgp_cmake_one_pred_sparse", (DL_FUNC) &_sgp_cmake_one_pred_sparse, 7},
-    {"_sgp_csolve_for_A_and_D_2d", (DL_FUNC) &_sgp_csolve_for_A_and_D_2d, 2},
-    {"_sgp_csparse_quadratic_form_symm_2d", (DL_FUNC) &_sgp_csparse_quadratic_form_symm_2d, 4},
-    {"_sgp_csparse_quadratic_form_asymm_2d", (DL_FUNC) &_sgp_csparse_quadratic_form_asymm_2d, 5},
-    {"_sgp_csolve_for_B_and_b_2d", (DL_FUNC) &_sgp_csolve_for_B_and_b_2d, 6},
-    {"_sgp_ccompute_bwfdr", (DL_FUNC) &_sgp_ccompute_bwfdr, 4},
-    {"_sgp_ccompute_bwfdx", (DL_FUNC) &_sgp_ccompute_bwfdx, 5},
+    {"_locdiffr_cinv", (DL_FUNC) &_locdiffr_cinv, 1},
+    {"_locdiffr_cifelse", (DL_FUNC) &_locdiffr_cifelse, 1},
+    {"_locdiffr_cgeteigs", (DL_FUNC) &_locdiffr_cgeteigs, 1},
+    {"_locdiffr_cifelse_eigvals", (DL_FUNC) &_locdiffr_cifelse_eigvals, 2},
+    {"_locdiffr_get_ldet", (DL_FUNC) &_locdiffr_get_ldet, 1},
+    {"_locdiffr_cpopulate_true_differences", (DL_FUNC) &_locdiffr_cpopulate_true_differences, 2},
+    {"_locdiffr_cpopulate_rejected_differences", (DL_FUNC) &_locdiffr_cpopulate_rejected_differences, 3},
+    {"_locdiffr_fastMeanFilter", (DL_FUNC) &_locdiffr_fastMeanFilter, 2},
+    {"_locdiffr_cpwdist", (DL_FUNC) &_locdiffr_cpwdist, 2},
+    {"_locdiffr_cmake_adj_mat", (DL_FUNC) &_locdiffr_cmake_adj_mat, 5},
+    {"_locdiffr_ctest_hierarchically", (DL_FUNC) &_locdiffr_ctest_hierarchically, 4},
+    {"_locdiffr_crunif", (DL_FUNC) &_locdiffr_crunif, 2},
+    {"_locdiffr_csolve_for_A_and_D", (DL_FUNC) &_locdiffr_csolve_for_A_and_D, 2},
+    {"_locdiffr_csparse_quadratic_form_symm", (DL_FUNC) &_locdiffr_csparse_quadratic_form_symm, 4},
+    {"_locdiffr_csparse_quadratic_form_asymm", (DL_FUNC) &_locdiffr_csparse_quadratic_form_asymm, 5},
+    {"_locdiffr_csolve_for_B_and_b", (DL_FUNC) &_locdiffr_csolve_for_B_and_b, 6},
+    {"_locdiffr_cmake_one_pred_sparse", (DL_FUNC) &_locdiffr_cmake_one_pred_sparse, 7},
+    {"_locdiffr_csolve_for_A_and_D_2d", (DL_FUNC) &_locdiffr_csolve_for_A_and_D_2d, 2},
+    {"_locdiffr_csparse_quadratic_form_symm_2d", (DL_FUNC) &_locdiffr_csparse_quadratic_form_symm_2d, 4},
+    {"_locdiffr_csparse_quadratic_form_asymm_2d", (DL_FUNC) &_locdiffr_csparse_quadratic_form_asymm_2d, 5},
+    {"_locdiffr_csolve_for_B_and_b_2d", (DL_FUNC) &_locdiffr_csolve_for_B_and_b_2d, 6},
+    {"_locdiffr_ccompute_bwfdr", (DL_FUNC) &_locdiffr_ccompute_bwfdr, 4},
+    {"_locdiffr_ccompute_bwfdx", (DL_FUNC) &_locdiffr_ccompute_bwfdx, 5},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_sgp(DllInfo *dll) {
+RcppExport void R_init_locdiffr(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

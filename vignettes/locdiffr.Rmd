@@ -1,8 +1,8 @@
 ---
-title: "Analysis of Differentially Interacting Genomic Regions"
+title: "Analysis of LOCal DIFFerences in chromatin aRchitecture"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{sgp}
+  %\VignetteIndexEntry{locdiffr}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup, echo = FALSE, message = FALSE, message = FALSE, warning = FALSE}
-library(sgp)
+library(locdiffr)
 ```
 
 We will run a preliminary analysis with some toy Hi-C data. There are two replicates each from two conditions. If you have more replicates, or differing numbers of replicates from each condition, that's okay. The package will automatically select which replicates to retain based on sequencing depth.
@@ -36,7 +36,7 @@ Let's prepare the data pre-loaded into this package. We can see that there are 4
 
 ```{r}
 # locate the data
-all_data <- list.files(system.file("extdata", package = "sgp"))
+all_data <- list.files(system.file("extdata", package = "locdiffr"))
 print(all_data)
 ```
 
@@ -47,9 +47,9 @@ Once we have defined file paths to two groups, the rest of the analysis is strai
 ```{r, cache = TRUE, message = FALSE, warning = FALSE, results = "hide"}
 # Define paths to data from 2 conditions
 ko_data <-
-    system.file("extdata", all_data[grepl(pattern = "KO", x = all_data)], package = "sgp")
+    system.file("extdata", all_data[grepl(pattern = "KO", x = all_data)], package = "locdiffr")
 parent_data <-
-    system.file("extdata", all_data[grepl(pattern = "parent", x = all_data)], package = "sgp")
+    system.file("extdata", all_data[grepl(pattern = "parent", x = all_data)], package = "locdiffr")
 
 # Compute the SCC scan statistics
 run_scc_scan(

@@ -1,7 +1,7 @@
 Package: locdiffr
 Type: Package
 Title: analysis of LOCal DIFFerences in chromatin aRchitecture
-Version: 0.0.99
+Version: 1.0
 Author: Hillary Koch
 Maintainer: <hillary.koch01@gmail.com>
 Description: Analysis of LOCal DIFFerences in chromatin aRchitecture, performed at multiples scales, with false discovery control

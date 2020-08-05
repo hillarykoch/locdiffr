@@ -1,4 +1,4 @@
-useDynLib(sgp, .registration=TRUE)
+useDynLib(locdiffr, .registration=TRUE)
 importFrom(cowplot, plot_grid)
 importFrom(doParallel, registerDoParallel)
 import(dplyr)
