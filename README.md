@@ -1,4 +1,4 @@
-# Multi-Scale Differential Interactions
+# locdiffr
 
 ## Dependencies
 
@@ -12,25 +12,25 @@
 Sometimes package won't load if the correct shared objects aren't found. So, if
 
 ```r
-devtools::install_github("hillarykoch/sgp", build_vignettes = TRUE)
+devtools::install_github("hillarykoch/locdiffr", build_vignettes = TRUE)
 ```
 
 doesn't work, need to try
 
 ```console
-git clone https://github.com/hillarykoch/sgp
+git clone https://github.com/hillarykoch/locdiffr
 R
 ```
 
 ```r
 Sys.setenv("PKG_LIBS" = "/usr/lib64/R/modules/lapack.so")
 devtools::build(pkg = "sgp/")
-install.packages("sgp_0.0.99.tar.gz", repos = NULL, type = "source")
+install.packages("locdiffr_0.0.99.tar.gz", repos = NULL, type = "source")
 q()
 n
 ```
 
 ```console
-rm -rf sgp
-rm sgp_0.0.99.tar.gz
+rm -rf locdiffr
+rm locdiffr_0.0.99.tar.gz
 ```
