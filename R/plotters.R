@@ -159,8 +159,7 @@ plot_cond_vs_cond <-
         geom_tile() +
         scale_fill_gradient(low = "white", high = "red", na.value = "white") +
         labs(x = condition_names[1], y = condition_names[2]) +
-        theme_minimal() +
-        theme(legend.position = "none")
+        theme_minimal()
 
     return(p)
 
@@ -304,8 +303,7 @@ plot_rej_vs_diffs <-
                     coord_fixed() +
                     scale_fill_gradient(low = "white", high = "red", na.value = "white") +
                     theme_minimal() +
-                    labs(x = labels[1], y = labels[2]) +
-                    theme(legend.position = "none")
+                    labs(x = labels[1], y = labels[2])
             } else {
                 diff_molten[diff_molten$value < 0,"value"] <- -log2(abs(diff_molten[diff_molten$value < 0,"value"]))
                 diff_molten[diff_molten$value > 0,"value"] <- log2(diff_molten[diff_molten$value > 0,"value"])
@@ -328,8 +326,7 @@ plot_rej_vs_diffs <-
                     coord_fixed() +
                     scale_fill_distiller(palette = "RdBu", na.value = "white") +
                     theme_minimal() +
-                    labs(x = labels[1], y = labels[2]) +
-                    theme(legend.position = "none")
+                    labs(x = labels[1], y = labels[2])
             }
             return(rej_p)
         }
