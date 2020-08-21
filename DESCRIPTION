@@ -31,7 +31,8 @@ LinkingTo:
     BH
 SystemRequirements:
     C++11
-Suggests: 
+Suggests:
+    forecast,
     knitr,
     rmarkdown
 VignetteBuilder: knitr
