@@ -1,7 +1,7 @@
 run_nnsgp <- function(y,
                     s,
                     X,
-                    num_neighbors = 25, # Number of nearest neighbors
+                    num_neighbors = 1, # Number of nearest neighbors
                     min_range = 1,
                     max_max_range = NULL, # max value for the spatial range parameter
                     init_range = 5, # init value of the spatial range parameter

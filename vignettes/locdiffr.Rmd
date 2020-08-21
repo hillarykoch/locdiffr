@@ -57,7 +57,7 @@ run_scc_scan(
     infiles2 = parent_data,
     outpath = "../inst/extdata/output/z.rds",
     resolution = 40000,
-    winsizes = c(10, 25),
+    winsizes = c(6, 12, 18),
     parallel = FALSE,
     offset = TRUE,
     min_count = 1,
@@ -68,8 +68,8 @@ run_scc_scan(
 fit_nngp(
     infile = "../inst/extdata/output/z.rds",
     outpath = "../inst/extdata/output/fit.rds",
-    num_neighbors = 5,
-    iters = 250,
+    num_neighbors = 1,
+    iters = 1000,
     parallel = FALSE
     )
 
@@ -78,16 +78,29 @@ sample_new_nngps(
     scc_scan_file = "../inst/extdata/output/z.rds",
     mcmc_fit_file = "../inst/extdata/output/fit.rds",
     outpath = "../inst/extdata/output/pred.rds",
-    stationary_iterations = 151:250,
+    stationary_iterations = 200:1000,
     parallel = FALSE,
-    BOOT = 500
+    BOOT = 100
     )
 
 ```
 
 _Note that windows can be filtered during the_\texttt{run_scc_scan} _step_: this is done with the options `min_count` and `proportion_below_min_count`. The setting in this example has `min_count = 1` and `proportion_below_min_count = 0.25`. This means that if more than 25\% of the bins within a window have less than 1 measured interaction, the window is filtered from downstream analyses. To do no filtering, one can set `proportion_below_min_count=1`.
 
-Results are used to test whether or not a region contains significantly differential interactions. To test, we need to compute $\theta^b(s_w):=\text{I}\big[Z^{b}(s_w) < \mu^b(s_w)\big]$, the indicator that the nearest-neighbor Gaussian process sampled at iteration $b$ at location $s_w$ is less than the mean process at iteration $b$ at the same location. This is done within the `sample_new_nngps` function. Note that, to test using the recommended weighted false discovery exceedance (wFDX) quantity, some bootstrapping needs to be done. You can specify the number of bootstrap replicates using the `BOOT` argument in the `sample_new_nngps` function. The larger the value of `BOOT`, the more accuracy your estimate of wFDX. A larger value of `BOOT` also slightly increases computationally burden.
+_Another note_ is that currently the `locdiffr` package only supports the exponential covariance function, so it is not necessary to use more than 1 neighbor. To see that this is a reasonable choice, check the partial autocorrelation function (PACF) of the transformed SCC sliding window statistic. In this case, the partial autocorrelation mostly disappears after lag 1, supporting the choice of the exponential covariance function (and only 1 nearest neighbor!) on these data.
+
+```{r, echo = 2:8, message=FALSE, warning=FALSE, fig.width=7, fig.height=2.5}
+library(magrittr)
+z <- readRDS("../inst/extdata/output/z.rds") %>%
+    purrr::map(1) %>% purrr::map("z_s")
+pacfs <-
+    purrr::map2(z, names(z), ~
+                    forecast::ggPacf(.x, lag.max = 12) +
+                    ggplot2::ggtitle(paste0("window size = ", .y)))
+cowplot::plot_grid(plotlist=pacfs, nrow = 1, ncol = 3)
+```
+
+Results from the model fitting are used to test whether or not a region contains significantly differential interactions. To test, we need to compute $\theta^b(s_w):=\text{I}\big[Z^{b}(s_w) < \mu^b(s_w)\big]$, the indicator that the nearest-neighbor Gaussian process sampled at iteration $b$ at location $s_w$ is less than the mean process at iteration $b$ at the same location. This is done within the `sample_new_nngps` function. Note that, to test using the recommended weighted false discovery exceedance (wFDX) quantity, some bootstrapping needs to be done. You can specify the number of bootstrap replicates using the `BOOT` argument in the `sample_new_nngps` function. The larger the value of `BOOT`, the more accuracy your estimate of wFDX. A larger value of `BOOT` also slightly increases computationally burden.
 
 Output from `sample_new_nngps` is used to test for significantly differential regions based on either the weighted false discovery rate or weighted false discovery exceedance criteria:
 
@@ -97,7 +110,7 @@ test_by_wFDR(
     scc_scan_file = "../inst/extdata/output/z.rds",
     sampled_nngps_file = "../inst/extdata/output/pred.rds",
     outpath = "../inst/extdata/output/wfdr.rds",
-    alpha = 0.1
+    alpha = 0.025
     )
 
 # Compute rejections based on weighted false discovery exceedence
@@ -105,8 +118,8 @@ test_by_wFDX(
     scc_scan_file = "../inst/extdata/output/z.rds",
     sampled_nngps_file = "../inst/extdata/output/pred.rds",
     outpath = "../inst/extdata/output/wfdx.rds",
-    alpha = 0.1,
-    beta = 0.1
+    alpha = 0.025,
+    beta = 0.025
     )
 
 ```
@@ -162,7 +175,7 @@ p <- plot_rejections_along_process(scc_scan_file = "../inst/extdata/output/z.rds
              sampled_nngps_file = "../inst/extdata/output/pred.rds",
              rejection_files = c("../inst/extdata/output/wfdr.rds", "../inst/extdata/output/wfdx.rds"),
              rejection_names = c("wFDR", "wFDX"))
-cowplot::plot_grid(plotlist = p, nrow = 2, ncol = 1)
+cowplot::plot_grid(plotlist = p, nrow = 3, ncol = 1)
 ```
 
 Likewise, you can see where these rejections fall along the Hi-C contact matrix with `plot_rej_vs_diffs`. This function will plot the absolute differences between pooled replicates from both conditions against the rejected regions. Like with the `plot_cond_vs_cond` function, you can use the `sub_range` argument to zoom in on a given location.
@@ -183,7 +196,7 @@ diff_v_rej_zoom <- plot_rej_vs_diffs(
     rejections_file = "../inst/extdata/output/wfdr.rds",
     resolution = 40000,
     condition_names = c("knockout", "parent"),
-    sub_range = c(4900000, 10100000)
+    sub_range = c(0, 4000000)
     )
 
 cowplot::plot_grid(diff_v_rej, diff_v_rej_zoom, nrow = 1, ncol = 2)
