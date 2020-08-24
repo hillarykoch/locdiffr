@@ -1,4 +1,4 @@
-# locdiffr
+# locdiffr (Analysis of LOCal DIFFerences in chromatin aRchitecture)
 
 ## Dependencies
 
@@ -9,28 +9,31 @@
     *   clang: [see here](http://clang.llvm.org/cxx_status.html)
     
 
-Sometimes package won't load if the correct shared objects aren't found. So, if
+## Installation
 
+Installation is easy with the R package `devtools`. If you don't already have `devtools` installed, you will first need to type (from within R)
+```r
+install.packages("devtools")
+```
+
+With `devtools` installed, simply enter the following:
 ```r
 devtools::install_github("hillarykoch/locdiffr", build_vignettes = TRUE)
 ```
 
-doesn't work, need to try
-
-```console
-git clone https://github.com/hillarykoch/locdiffr
-R
-```
-
+Installation may take a couple of minutes due to building the vignette. The vignette contains all of the necessary instructions to run `locdiffr`. To view the vignette, enter the following within R:
 ```r
-Sys.setenv("PKG_LIBS" = "/usr/lib64/R/modules/lapack.so")
-devtools::build(pkg = "locdiffr/")
-install.packages("locdiffr_1.0.tar.gz", repos = NULL, type = "source")
-q()
-n
+browseVignettes(package = "locdiffr")
 ```
 
-```console
-rm -rf locdiffr
-rm locdiffr_1.0.tar.gz
-```
+## Input format
+
+To begin the analysis, you need file paths to all of the data, split into two groups. The data should be in the following tab-delimited format:
+
+| Loc1 | Loc2   | Counts |
+|------|--------|--------|
+| 0    | 0      | 100    |
+| 0    | 50000  | 88     |
+| 0    | 100000 | 40     |
+
+Here, Loc1 is the start of the first bin, Loc2 the start of the second bin, and counts indicating the read counts for the interactions between those 2 bins. The value in Loc1 should always be less than or equal to the value in Loc2. _**An individual dataset is intended to be Hi-C data from an entire chromosome. Chromosomes should be analyzed separately.**_
