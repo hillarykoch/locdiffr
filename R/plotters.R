@@ -157,7 +157,8 @@ plot_cond_vs_cond <-
 
     p <- ggplot(data = df, aes(x = Var1, y = Var2, fill = log2(value + 1))) +
         geom_tile() +
-        scale_fill_gradient(low = "white", high = "red", na.value = "white") +
+        scale_fill_gradientn(colours = colorRampPalette(c("white", "red"))(10000), na.value = "white") +
+        # scale_fill_gradient(low = "white", high = "red", na.value = "white") +
         labs(x = condition_names[1], y = condition_names[2]) +
         theme_minimal()
 
@@ -230,13 +231,13 @@ plot_rej_vs_diffs <-
         rm(dmat)
 
         dd <- downsample_to_equal_reads(list(d1, d2))
-        
+
         if(absolute) {
-            abs_diffs <- abs(dd[[1]] - dd[[2]])    
+            abs_diffs <- abs(dd[[1]] - dd[[2]])
         } else {
             abs_diffs <- dd[[1]] - dd[[2]]
         }
-        
+
         rejections <- readRDS(rejections_file)
         winsizes <- as.numeric(names(rejections))
 
@@ -277,12 +278,12 @@ plot_rej_vs_diffs <-
             #-------------------------------------------------------------------
             # plot
             if(absolute) {
-                labels <- c(paste0("|", paste0(condition_names, collapse = "-"), "|"), "rejections")    
+                labels <- c(paste0("|", paste0(condition_names, collapse = "-"), "|"), "rejections")
             } else {
                 labels <- c(paste0(condition_names, collapse = "-"), "rejections")
             }
-            
-            
+
+
             if(absolute) {
                 rej_p <- ggplot(data = dplyr::filter(rej_molten, Var1 < Var2), aes(
                     x = Var1,
