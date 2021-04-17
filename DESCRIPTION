@@ -22,8 +22,7 @@ Imports:
     purrr,
     RandomFieldsUtils,
     Rcpp (>= 0.12.16),
-    stats,
-    tidyverse
+    stats
 Depends: R (>= 3.5)
 LinkingTo:
     Rcpp,
