@@ -83,8 +83,10 @@ run_scc_scan <-
         if (parallel) {
             cluster <- makeCluster(ncores)
             registerDoParallel(cluster)
-            clusterEvalQ(cluster, library(sgp))
-            clusterEvalQ(cluster, library(tidyverse))
+            clusterEvalQ(cluster, library(locdiffr))
+            clusterEvalQ(cluster, library(purrr))
+	    clusterEvalQ(cluster, library(magrittr))
+	    clusterEvalQ(cluster, library(dplyr))
 
             zs <-
                 foreach(i = seq_along(winsizes), .packages = "foreach") %dopar% {
@@ -93,7 +95,7 @@ run_scc_scan <-
                         map2(
                             map(dd, "cond1"),
                             map(dd, "cond2"),
-                            ~ sgp::get_loc_sim(
+                            ~ get_loc_sim(
                                 .x,
                                 .y,
                                 h = 0,
@@ -191,9 +193,11 @@ fit_nngp <-
         if (parallel) {
             cluster <- makeCluster(ncores)
             registerDoParallel(cluster)
-            clusterEvalQ(cluster, library(sgp))
-            clusterEvalQ(cluster, library(tidyverse))
             clusterEvalQ(cluster, library(fda))
+	    clusterEvalQ(cluster, library(locdiffr))
+            clusterEvalQ(cluster, library(purrr))
+            clusterEvalQ(cluster, library(magrittr))
+            clusterEvalQ(cluster, library(dplyr))
 
             fits <-
                 foreach(i = seq_along(winsizes), .packages = "foreach") %dopar% {
@@ -302,9 +306,10 @@ sample_new_nngps <-
                 if (parallel) {
                     cluster <- parallel::makeCluster(ncores)
                     doParallel::registerDoParallel(cluster)
-                    parallel::clusterEvalQ(cluster, library(sgp))
-                    parallel::clusterEvalQ(cluster, library(tidyverse))
-
+		    clusterEvalQ(cluster, library(locdiffr))
+	            clusterEvalQ(cluster, library(purrr))
+        	    clusterEvalQ(cluster, library(magrittr))
+	            clusterEvalQ(cluster, library(dplyr))
                     preds <-
                         foreach::foreach(i = seq_along(winsizes), .packages = "foreach") %dopar% {
                             s <- matrix(zs[[i]]$z1$crd, ncol = 1)
@@ -399,9 +404,10 @@ sample_new_nngps <-
             if (parallel) {
                 cluster <- parallel::makeCluster(ncores)
                 doParallel::registerDoParallel(cluster)
-                parallel::clusterEvalQ(cluster, library(sgp))
-                parallel::clusterEvalQ(cluster, library(tidyverse))
-
+	        clusterEvalQ(cluster, library(locdiffr))
+                clusterEvalQ(cluster, library(purrr))
+                clusterEvalQ(cluster, library(magrittr))
+                clusterEvalQ(cluster, library(dplyr))
                 preds <-
                     foreach::foreach(i = seq_along(winsizes), .packages = "foreach") %dopar% {
                         s <- matrix(zs[[i]]$z1$crd, ncol = 1)

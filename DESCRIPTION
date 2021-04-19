@@ -12,6 +12,7 @@ Imports:
     doParallel,
     dplyr,
     emulator,
+    fda,
     fields,
     foreach,
     geoR,
